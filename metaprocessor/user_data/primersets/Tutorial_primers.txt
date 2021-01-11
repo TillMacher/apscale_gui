@@ -1,0 +1,8 @@
+fwhF2_f1,CTGT,fwd
+fwhF2_f5,TCTCA,fwd
+fwhF2_f6,AGCTA,fwd
+fwhF2_f9,GTCCTA,fwd
+fwhR2n_r1,GTCCTA,rev
+fwhR2n_r5,GAACA,rev
+fwhR2n_r6,CACCT,rev
+fwhR2n_r9,CTGT,rev
