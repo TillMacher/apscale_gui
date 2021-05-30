@@ -1,4 +1,9 @@
-def v_clustering(clustering_folder, cluster_threshold, path_to_outdirs, representative, print_handle, window):
+def v_clustering_raw(path_to_outdirs, clustering_threshold, main_log_file):
+
+    # main_log_file = "/Users/tillmacher/Desktop/MP_Projects/Projects/z_TEST/log.xlsx"
+    # path_to_outdirs = "/Users/tillmacher/Desktop/MP_Projects/Projects/z_TEST"
+    # clustering_threshold = 0.97
+    # representative = "Centroid"
 
     import datetime, glob, subprocess, gzip, os
     import PySimpleGUI as sg
@@ -8,165 +13,249 @@ def v_clustering(clustering_folder, cluster_threshold, path_to_outdirs, represen
     from Bio import SeqIO
     import pandas as pd
 
+    ## define functions
+    def count_fasta_reads(file):
+        def blocks(files, size=65536):
+            while True:
+                b = files.read(size)
+                if not b: break
+                yield b
+        with open(file, "r",encoding="utf-8",errors='ignore') as f:
+            return sum(bl.count(">") for bl in blocks(f))
+
     ## define variables
-    pooled_files_fasta_derep_nochimeras = str(path_to_outdirs) + "/7_Clustering/_data/_clusters/pooled_files_derep_nochimeras.fasta"
-    pooled_files_derep_folder = str(path_to_outdirs) + "/7_Clustering/_data/_clusters"
-    v_cluster_OTUs_fasta = Path(pooled_files_derep_folder + "/v_cluster/v_cluster_OTUs_" + cluster_threshold.replace(".", "") + ".fasta")
-    v_cluster_OTUs_relabeled_fasta = Path(pooled_files_derep_folder + "/v_cluster/v_cluster_OTUs_" + cluster_threshold.replace(".", "") + "_relabeled.fasta")
-    stats_file_OTUs = str(path_to_outdirs) + "/7_Clustering/_stats/v_cluster_" + cluster_threshold.replace(".", "") + "_OTUs.html"
+    v_unoise_ESVs_fasta_no_chimera = Path(str(path_to_outdirs) + "/5_pre_processing/_data/pooled_files.fasta")
+    OTU_folder = Path(str(path_to_outdirs) + "/7_clustering/OTUs_a" + str(clustering_threshold))
+    v_OTUs_fasta = Path(str(OTU_folder) + "/OTU_a" + str(clustering_threshold) + ".fasta")
+    stderr_file = Path(str(path_to_outdirs) + "/7_clustering/_log/OTU_a" + str(clustering_threshold) + ".log")
 
-    ## print standard starting message
-    print_handle.print(datetime.datetime.now().strftime("%H:%M:%S") + ": Starting " + cluster_threshold + " clustering")
-    window.refresh()
+    ## collect the number of raw reads
+    log_df = pd.read_excel(main_log_file)
 
-    dirName = Path(pooled_files_derep_folder)
+    dirName = Path(str(path_to_outdirs) + "/7_clustering/")
     if not os.path.exists(dirName):
-        os.mkdir(dirName)
+        os.mkdir(Path(dirName))
 
-    dirName = Path(pooled_files_derep_folder + "/v_cluster/")
-    if not os.path.exists(dirName):
-        os.mkdir(dirName)
+    if not os.path.exists(OTU_folder):
+        os.mkdir(Path(OTU_folder))
 
-    dirName = Path(str(path_to_outdirs) + "/8_Read_tables/_data" + "/v_cluster")
-    if not os.path.exists(dirName):
-        os.mkdir(dirName)
+    log_folder = Path(str(path_to_outdirs) + "/7_clustering/_log")
+    if not os.path.exists(log_folder):
+        os.mkdir(Path(log_folder))
 
-    if representative == "Consensus":
-        representative = "--consout"
+    if not v_unoise_ESVs_fasta_no_chimera.exists():
+        sg.PopupError("Warning: No files found! Please check your the merged reads!")
+
     else:
-        representative = "--centroids"
-
-    subprocess.call(["vsearch", "--cluster_size", pooled_files_fasta_derep_nochimeras, "--id", cluster_threshold, "--sizein", "--relabel", "OTU_", representative, v_cluster_OTUs_fasta])
-
-    OTU = 1
-    x_values =[]
-    y_values = []
-
-    outfile =  open(v_cluster_OTUs_relabeled_fasta, "w")
-    for record in SeqIO.parse (v_cluster_OTUs_fasta, "fasta"):
-        x_values.append(">OTU_" + str(OTU))
-        y_values.append(record.id.split(":")[-1].split("=")[-1].replace(";", ""))
-        outfile.write(">OTU_" + str(OTU) + "\n")
-        outfile.write(str(record.seq) + "\n")
-        OTU += 1
-
-    ##################################################
-    # draw the stats plot
-    fig = go.Figure(data=[
-        go.Bar(name='OTUs', x=x_values, y=y_values),
-        ])
-    fig.update_layout(barmode='stack')
-    fig.update_xaxes(tickangle=90, tickfont=dict(size=10))
-    fig.write_html(str(stats_file_OTUs))
-
-    ##################################################
-    # re-mapping
-
-    ## print standard starting message
-    print_handle.print(datetime.datetime.now().strftime("%H:%M:%S") + ": Remapping OTUs to files")
-    window.refresh()
-
-    input_files = sorted(glob.glob(str(path_to_outdirs) + "/7_Clustering/_data/*/*_derep_singletons_nochimeras.fasta"))
-
-    all_OTUs_list = []
-    all_sequences_list = []
-    for record in SeqIO.parse(v_cluster_OTUs_relabeled_fasta, "fasta"):
-        all_OTUs_list.append(record.id)
-        all_sequences_list.append(str(record.seq))
-
-    currentDirectory = os.getcwd()
-
-    for file in input_files:
-        hits = Path(str(path_to_outdirs) + "/7_Clustering/_data/" + Path(file).stem.replace("_derep_singletons_nochimeras", "/") + Path(file).stem.replace("_derep_singletons_nochimeras", "_v_clustering_hits") + ".fasta")
-        OTU_stats = Path(str(path_to_outdirs) + "/7_Clustering/_data/" + Path(file).stem.replace("_derep_singletons_nochimeras", "/") + Path(file).stem.replace("_derep_singletons_nochimeras", "_v_clustering_stats") + ".txt")
-        stderr_file = Path(str(path_to_outdirs) + "/7_Clustering/_data/" + Path(file).stem.replace("_derep_singletons_nochimeras", "/") + Path(file).stem.replace("_derep_singletons_nochimeras", "_v_clustering") + ".log")
-
-        ### Correct? ID = 97% is not a problem?
-        # MAP EACH FILE AGAINST OTUs
         f = open(stderr_file, "w")
-        subprocess.call(["vsearch", "--usearch_global", file, "-db", v_cluster_OTUs_relabeled_fasta, "--id", "0.97", "--blast6out", str(hits), "--maxhits", "1", "--otutabout", str(OTU_stats), "--output_no_hits"], stderr=f)
+
+        ## CLUSTERING
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Starting to cluster the pooled data.")
+
+        subprocess.call(["vsearch", "--cluster_size", str(v_unoise_ESVs_fasta_no_chimera), "--id", str(clustering_threshold), "--sizein", "--relabel", "OTU_", "--centroids", str(v_OTUs_fasta)], stderr=f)
+
+        n_OTUs = count_fasta_reads(v_OTUs_fasta)
+
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Data was cluster into", str(n_OTUs), "OTUs.")
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Finished to cluster the pooled data.")
+
         f.close()
 
-    ##################################################
-    # create raw OTU table
+        # RE-MAPPING and READ TABLE GENERATION
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Starting to re-map OTUs to files.")
 
-    read_table_dict = {}
+        ## collect sequences from the fasta file
+        all_OTUs_dict = {}
+        for record in SeqIO.parse(v_OTUs_fasta, "fasta"):
+            all_OTUs_dict[str(record.id)] = str(record.seq)
 
-    for file in input_files:
-        filename = Path(file).stem.replace("_derep_singletons_nochimeras", "")
-        OTU_stats = Path(str(path_to_outdirs) + "/7_Clustering/_data/" + Path(file).stem.replace("_derep_singletons_nochimeras", "/") + Path(file).stem.replace("_derep_singletons_nochimeras", "_v_clustering_stats") + ".txt")
-        v_clustering_raw_read_table = Path(str(path_to_outdirs) + "/8_Read_tables/_data/v_cluster/v_clustering_" + cluster_threshold.replace(".", "") + ".xlsx")
+        input_files = log_df["Sample ID"].values.tolist()
 
-        if os.stat(OTU_stats).st_size != 0:
-            OTU_stats_df = pd.read_csv(OTU_stats, delimiter="\t").transpose()
-            OTU_stats_df = OTU_stats_df.rename(columns=OTU_stats_df.iloc[0])
-            OTU_stats_df = OTU_stats_df.drop(OTU_stats_df.index[0])
-            OTU_stats_df_headers = OTU_stats_df.columns.tolist()
-            read_table_list = []
+        read_table_df = pd.DataFrame(all_OTUs_dict.keys(), columns=["ID"])
 
-            for OTU in all_OTUs_list:
-                if OTU in OTU_stats_df_headers:
-                    read_table_list.append(int(''.join(map(str, OTU_stats_df[OTU].values.tolist()))))
-                else:
-                    read_table_list.append(0)
+        for sample_name in input_files:
+            remapping_folder = Path(str(OTU_folder) + "/" + sample_name)
+            stderr_file = Path(str(OTU_folder) + "/" + sample_name + "/" + sample_name + ".log")
+            blastout_file = Path(str(OTU_folder) + "/" + sample_name + "/" + sample_name + "_blast.txt")
+            otutabout_file = Path(str(OTU_folder) + "/" + sample_name + "/" + sample_name + "_otu.txt")
+            sample_fasta = Path(str(path_to_outdirs) + "/5_pre_processing/_data/" + sample_name + "/" + sample_name + "_derep_singletons_nochimeras.fasta")
 
-            read_table_dict[filename] = read_table_list
+            if not os.path.exists(remapping_folder):
+                os.mkdir(Path(remapping_folder))
 
-            # # lastly append the number of unassigned reads!
-            # # those are collected from the merge log file!!
-            # merge_log = Path(str(path_to_outdirs) + "/3_Paired-end_merging/_log/" + filename + ".log")
-            # f = open(merge_log, "r")
-            # sum_of_reads = f.readline()
-            # f.close()
-            # sum_of_reads = int(sum_of_reads.split(" ")[-3])
-            # sum_of_assigned_reads = sum(read_table_list)
-            # sum_of_unassinged_reads = sum_of_reads - sum_of_assigned_reads
-            # read_table_list.append(sum_of_unassinged_reads)
+            # MAP EACH FILE AGAINST OTUs
+            f = open(stderr_file, "w")
+            subprocess.call(["vsearch", "--usearch_global", sample_fasta, "-db", str(v_OTUs_fasta), "--id", str(clustering_threshold), "--blast6out", str(blastout_file), "--output_no_hits", "--maxhits", "1", "--otutabout", str(otutabout_file)], stderr=f)
+            f.close()
 
-        else:
-            print("Discarded:", filename, "- no matches after remapping")
+            try:
+                ## open the mapping results
+                otutabout_df = pd.read_csv(otutabout_file, sep='\t')
+                ## store the number of reads for each OTU
+                reads_list = []
+                for OTU in all_OTUs_dict.keys():
+                    ## test if the OTU exists
+                    try:
+                        ## collect the reads
+                        reads = otutabout_df.loc[otutabout_df['#OTU ID'] == OTU].values.tolist()[0][1]
+                    except:
+                        ## if not store 0 reads
+                        reads = 0
+                    ## append the reads to the list
+                    reads_list.append(reads)
+                ## add a new column for each sample to the df, containing all read numbers
+                read_table_df[sample_name] = reads_list
+            except:
+                ## if file does not exist, add 0 reads for all OTUs
+                read_table_df[sample_name] = [0] * len(all_OTUs_dict.keys())
 
-    # now collect all previously discarded files
-    # add them to the table
-    discarded_files = sorted(glob.glob(str(path_to_outdirs) + "/*/_data_discarded/*"))
-    # add 0 only
-    for file in discarded_files:
-        filename = Path(file).name.replace(".fastq", "")
-        read_table_list = []
-        for OTU in all_OTUs_list:
-            read_table_list.append(0)
+        ## sort the read table
+        read_table_df["sort"] = [int(OTU.split("_")[1]) for OTU in read_table_df["ID"]]
+        read_table_df = read_table_df.sort_values("sort")
+        read_table_df = read_table_df.drop(columns=['sort'])
+        read_table_df["Sequences"] = [all_OTUs_dict[OTU] for OTU in read_table_df["ID"].values.tolist()]
 
-        read_table_dict[filename] = read_table_list
+        ## write the read table
+        read_table_xlsx = Path(str(OTU_folder) + "/OTU_a" + str(clustering_threshold) + ".xlsx")
+        read_table_df.to_excel(read_table_xlsx, index=False)
 
-        # lastly append the number of unassigned reads!
-        # those are collected from the merge log file!!
-        # merge_log = Path(str(path_to_outdirs) + "/3_Paired-end_merging/_log/" + filename + ".log")
-        # f = open(merge_log, "r")
-        # sum_of_reads = f.readline()
-        # f.close()
-        # sum_of_reads = int(sum_of_reads.split(" ")[-3])
-        # sum_of_assigned_reads = sum(read_table_list)
-        # sum_of_unassinged_reads = sum_of_reads - sum_of_assigned_reads
-        # read_table_list.append(sum_of_unassinged_reads)
-        # read_table_dict[filename] = read_table_list
+        ## write to log file
+        OTU_list = []
+        for sample in log_df["Sample ID"]:
+            OTU_list.append(len([n for n in read_table_df[sample].values.tolist() if n != 0]))
+        id = "OTUs (id=" + str(clustering_threshold) + ")"
+        log_df[id] = OTU_list
+        log_df.to_excel(main_log_file, index=False)
 
-    # create the read table and finish the script
-    read_table_df = pd.DataFrame.from_dict(read_table_dict, orient='columns')
-    read_table_df.insert(0, "ID", all_OTUs_list, True)
-    read_table_df['Sequences'] = all_sequences_list
-    read_table_df.to_excel(v_clustering_raw_read_table, index=False)
+        ## Finish script
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Finished to re-map OTUs to files.")
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Wrote OTU read table.")
 
-    ## print standard starting message
-    print_handle.print(datetime.datetime.now().strftime("%H:%M:%S") + ": Writing read table.")
-    window.refresh()
+def v_clustering_denoised(path_to_outdirs, clustering_threshold, unoise_alpha, main_log_file):
 
-    v_clustering_raw_read_table_fasta = Path(str(path_to_outdirs) + "/8_Read_tables/_data/v_cluster/v_clustering_" + cluster_threshold.replace(".", "") + ".fasta")
-    f = open(v_clustering_raw_read_table_fasta, "w")
-    for row in read_table_df[["ID", "Sequences"]].values.tolist():
-        f.write(">" + row[0] + "\n" + row[1] + "\n")
-    f.close()
+    import datetime, glob, subprocess, gzip, os
+    import PySimpleGUI as sg
+    from pathlib import Path
+    from joblib import Parallel, delayed
+    import plotly.graph_objects as go
+    from Bio import SeqIO
+    import pandas as pd
 
-    ## print standard starting message
-    print_handle.print(datetime.datetime.now().strftime("%H:%M:%S") + ": Finished " + cluster_threshold + " clustering.")
-    window.refresh()
-    sg.Popup("Read table is found under:", Path(str(path_to_outdirs) + "/8_Read_tables/_data/v_cluster"), title="Finished", keep_on_top=True)
+    ## define functions
+    def count_fasta_reads(file):
+        def blocks(files, size=65536):
+            while True:
+                b = files.read(size)
+                if not b: break
+                yield b
+        with open(file, "r",encoding="utf-8",errors='ignore') as f:
+            return sum(bl.count(">") for bl in blocks(f))
+
+    ## define variables
+    ESV_ID = "ESV_a" + str(unoise_alpha)
+    v_unoise_ESVs_fasta_no_chimera = Path(str(path_to_outdirs) + "/6_denoising/" + ESV_ID + "/" + ESV_ID + "_no_chimera.fasta")
+    OTU_folder = Path(str(path_to_outdirs) + "/7_clustering/OTU_id" + str(clustering_threshold) + "_a" + str(unoise_alpha))
+    v_OTUs_fasta = Path(str(OTU_folder) + "/OTU_id" + str(clustering_threshold)  + "_a" + str(unoise_alpha) + ".fasta")
+    stderr_file = Path(str(path_to_outdirs) + "/7_clustering/_log/OTU_id" + str(clustering_threshold) + ".log")
+
+    ## collect the number of raw reads
+    log_df = pd.read_excel(main_log_file)
+
+    dirName = Path(str(path_to_outdirs) + "/7_clustering/")
+    if not os.path.exists(dirName):
+        os.mkdir(Path(dirName))
+
+    if not os.path.exists(OTU_folder):
+        os.mkdir(Path(OTU_folder))
+
+    log_folder = Path(str(path_to_outdirs) + "/7_clustering/_log")
+    if not os.path.exists(log_folder):
+        os.mkdir(Path(log_folder))
+
+    if not v_unoise_ESVs_fasta_no_chimera.exists():
+        sg.PopupError("Warning: No files found! Please check your the merged reads!")
+
+    else:
+        f = open(stderr_file, "w")
+
+        ## CLUSTERING
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Starting to cluster the pooled data.")
+
+        subprocess.call(["vsearch", "--cluster_size", str(v_unoise_ESVs_fasta_no_chimera), "--id", str(clustering_threshold), "--sizein", "--relabel", "OTU_", "--centroids", str(v_OTUs_fasta)], stderr=f)
+
+        n_OTUs = count_fasta_reads(v_OTUs_fasta)
+
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Data was cluster into", str(n_OTUs), "OTUs.")
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Finished to cluster the pooled data.")
+
+        f.close()
+
+        # RE-MAPPING and READ TABLE GENERATION
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Starting to re-map OTUs to files.")
+
+        ## collect sequences from the fasta file
+        all_OTUs_dict = {}
+        for record in SeqIO.parse(v_OTUs_fasta, "fasta"):
+            all_OTUs_dict[str(record.id)] = str(record.seq)
+
+        input_files = log_df["Sample ID"].values.tolist()
+
+        read_table_df = pd.DataFrame(all_OTUs_dict.keys(), columns=["ID"])
+
+        for sample_name in input_files:
+            remapping_folder = Path(str(OTU_folder) + "/" + sample_name)
+            stderr_file = Path(str(OTU_folder) + "/" + sample_name + "/" + sample_name + ".log")
+            blastout_file = Path(str(OTU_folder) + "/" + sample_name + "/" + sample_name + "_blast.txt")
+            otutabout_file = Path(str(OTU_folder) + "/" + sample_name + "/" + sample_name + "_otu.txt")
+            sample_fasta = Path(str(path_to_outdirs) + "/5_pre_processing/_data/" + sample_name + "/" + sample_name + "_derep_singletons_nochimeras.fasta")
+
+            if not os.path.exists(remapping_folder):
+                os.mkdir(Path(remapping_folder))
+
+            # MAP EACH FILE AGAINST OTUs
+            f = open(stderr_file, "w")
+            subprocess.call(["vsearch", "--usearch_global", sample_fasta, "-db", str(v_OTUs_fasta), "--id", str(clustering_threshold), "--blast6out", str(blastout_file), "--output_no_hits", "--maxhits", "1", "--otutabout", str(otutabout_file)], stderr=f)
+            f.close()
+
+            try:
+                ## open the mapping results
+                otutabout_df = pd.read_csv(otutabout_file, sep='\t')
+                ## store the number of reads for each OTU
+                reads_list = []
+                for OTU in all_OTUs_dict.keys():
+                    ## test if the OTU exists
+                    try:
+                        ## collect the reads
+                        reads = otutabout_df.loc[otutabout_df['#OTU ID'] == OTU].values.tolist()[0][1]
+                    except:
+                        ## if not store 0 reads
+                        reads = 0
+                    ## append the reads to the list
+                    reads_list.append(reads)
+                ## add a new column for each sample to the df, containing all read numbers
+                read_table_df[sample_name] = reads_list
+            except:
+                ## if file does not exist, add 0 reads for all OTUs
+                read_table_df[sample_name] = [0] * len(all_OTUs_dict.keys())
+
+        ## sort the read table
+        read_table_df["sort"] = [int(OTU.split("_")[1]) for OTU in read_table_df["ID"]]
+        read_table_df = read_table_df.sort_values("sort")
+        read_table_df = read_table_df.drop(columns=['sort'])
+        read_table_df["Sequences"] = [all_OTUs_dict[OTU] for OTU in read_table_df["ID"].values.tolist()]
+
+        ## write the read table
+        read_table_xlsx = Path(str(OTU_folder) + "/OTU_id" + str(clustering_threshold)  + "_a" + str(unoise_alpha) + ".xlsx")
+        read_table_df.to_excel(read_table_xlsx, index=False)
+
+        ## write to log file
+        OTU_list = []
+        for sample in log_df["Sample ID"]:
+            OTU_list.append(len([n for n in read_table_df[sample].values.tolist() if n != 0]))
+        id = "OTUs (id=" + str(clustering_threshold) + ";a=" + str(unoise_alpha) + ")"
+        log_df[id] = OTU_list
+        log_df.to_excel(main_log_file, index=False)
+
+        ## Finish script
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Finished to re-map OTUs to files.")
+        print(datetime.datetime.now().strftime("%H:%M:%S") + ": Wrote OTU read table.")

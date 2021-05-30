@@ -1,56 +1,52 @@
-def function_rename_samples(rename_data_folder, sample_renaming_sheet, path_to_outdirs, suffix_list):
+def create_rename_sheet(file_folder, path_to_outdirs):
 
-    import glob, sys, subprocess, os, hashlib, gzip, multiprocessing, shutil, re
-    import PySimpleGUI as sg
-    from pathlib import Path
-    from joblib import Parallel, delayed
+    import os
     import pandas as pd
-    import webbrowser
-    from Bio import SeqIO
-    from Bio.Seq import Seq
-    import plotly.graph_objects as go
+    from pathlib import Path
 
-    suffix_list = [".1", ".2"]
-    rename_data_folder = "/Users/tillmacher/Desktop/MP_Projects/Projects/Robot_LFU_data/0_raw_data/_data"
-    sample_renaming_sheet = "/Users/tillmacher/Desktop/MP_Projects/Projects/Robot_LFU_data/rename_sheet.xlsx"
-    path_to_outdirs = "/Users/tillmacher/Desktop/MP_Projects/Projects/Robot_LFU_data/"
+    # collect the files from the inout folder
+    file_folder = Path(file_folder)
+    input_files = sorted(glob.glob(str(file_folder) + "/*.fastq.gz"))
 
-    sample_renaming_sheet = Path(sample_renaming_sheet)
-    rename_sheet_df = pd.read_excel(sample_renaming_sheet)
-    input_files = sorted(glob.glob(str(rename_data_folder) + "/*.fastq.gz"))
-
-    files_list = []
-
-    #\xa0
-
-    for i, file in enumerate(rename_sheet_df.values.tolist()):
-        # check if r1 reads file exists
-        # then rename it
-        file_r1 = Path(rename_data_folder + "/" + file[0] + suffix_list[0] + ".fastq.gz")
-        if file_r1.is_file():
-            new_name = Path(rename_data_folder + "/" + file[1] + suffix_list[0] + ".fastq.gz")
-            os.rename(file_r1, new_name)
-            print(file_r1.name + "\t>>\t" + new_name.name)
+    ## create a rename sheet
+    rename_sheet_list = []
+    for i, file in enumerate(input_files):
+        if (i % 2) == 0:
+            replicate = "_r1.fastq.gz"
         else:
-            print("Warning: r1 reads are missing -", file[0])
+            replicate = "_r2.fastq.gz"
+        file_name = str(Path(file).stem).replace(".fastq", "")
+        file_path = str(Path(file))
+        new_name = ""
+        new_name_function = "=C" + str(i+2) + "&D" + str(i+2)
+        rename_sheet_list = rename_sheet_list + [[file_path, file_name, new_name, replicate, new_name_function]]
 
-        # check if r2 reads file exists
-        # then rename it
-        file_r2 = Path(rename_data_folder + "/" + file[0] + suffix_list[1] + ".fastq.gz")
-        if file_r2.is_file():
-            new_name = Path(rename_data_folder + "/" + file[1] + suffix_list[1] + ".fastq.gz")
-            os.rename(file_r2, new_name)
-            print(file_r2.name + "\t>>\t" + new_name.name)
-        else:
-            print("Warning: r2 reads are missing -", file[0])
+    rename_sheet = str(path_to_outdirs) + "/rename_sheet.xlsx"
+    df = pd.DataFrame(rename_sheet_list, columns=["File path", "File name", "ENTER NEW NAME", "Replicate suffix", "New name"])
+    df.to_excel(rename_sheet, index=False)
 
-    sg.Popup("Renamed all files in:", Path(str(rename_data_folder)), title="Finished")
+def rename_samples(rename_sheet):
+    import os
+    import pandas as pd
+    from pathlib import Path
+    import PySimpleGUI as sg
 
+    df = pd.read_excel(rename_sheet)
+    rename_list = df.values.tolist()
 
-
-
-
-
+    ## check table
+    n_files = len(df["New name"].values.tolist())
+    n_pairs = n_files / 2
+    ## i) for duplicates
+    if len(set(df["New name"].values.tolist())) != n_pairs:
+        sg.PopupError("Error: Duplicates found!\nPlease check your rename sheet!")
+    else:
+        answer = sg.PopupYesNo("Warning: Files will be overwritten!\nMake sure to create a backup first!\n\nContinue?")
+        if answer == "Yes":
+            for file in rename_list:
+                old_file = file[0]
+                new_file = file[-1]
+                os.rename(old_file, new_file)
 
 
 
