@@ -1,6 +1,5 @@
-# Metaprocessor
-
-More updates, installation instructions and a tutorial are coming soon.
+# APSCALE
+Advanced Pipeline for Simple yet Comprehensive Analyses of DNA metabarcoding data
 
 ## Background
 
