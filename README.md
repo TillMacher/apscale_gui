@@ -1,5 +1,7 @@
 # Metaprocessor
 
+More updates, installation instructions and a tutorial are coming soon.
+
 ## Background
 
 tbd
