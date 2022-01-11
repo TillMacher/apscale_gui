@@ -9,8 +9,8 @@ tbd
 ## Requirements
 
 * Vsearch
-* Cutadapt
-* FastQC (optional)
+* Python <3.7
+* Pip
 
 ## Installation
 
