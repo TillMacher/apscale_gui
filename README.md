@@ -1,4 +1,5 @@
-# APSCALE
+# APSCALE (Graphical User Infercace)
+
 Advanced Pipeline for Simple yet Comprehensive Analyses of DNA metabarcoding data
 
 ## Background
