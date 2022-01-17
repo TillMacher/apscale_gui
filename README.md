@@ -72,10 +72,10 @@ and it should return the version number, for example:
 
 ## Tutorial
 ### Creating a new project
-![](/_data/apscale_start.png "figure*1" =250x250)
+![](/_data/apscale_start.png "figure*1")
 
 ### The interace
-![](/_data/apscale_gui.png "figure*2" =250x250)
+![](/_data/apscale_gui.png "figure*2" = 250x250)
 
 ### Running apscale
 ![](/_data/apscale_run.png "figure*3" =250x250)
