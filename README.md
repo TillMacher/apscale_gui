@@ -72,7 +72,7 @@ and it should return the version number, for example:
 
 ## Tutorial
 ### Creating a new project
-![](/_data/apscale_start.png=250x250)
+![](https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png=250x250)
 
 ### The interace
 ![](/_data/apscale_gui.png=250x250)
