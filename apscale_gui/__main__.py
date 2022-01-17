@@ -204,12 +204,17 @@ def main():
                 [sg.Text('Current project:', font=('Arial', 11)), sg.Text(project_folder, font=('Arial', 11))],
     			[sg.Text('',size=(1,1))],
     			[sg.TabGroup([[sg.Tab('Metabarcoding processing tools', layout_tools)]])], ## size = (w, h)
-    			[sg.Text('',size=(2,1))],
+    			[sg.Text('',size=(2,2))],
     			[sg.Exit(button_color=('black', 'red')),
-                sg.Text('', size=(20,1)),
-                sg.Button(image_filename=github_png, image_size=(26,26), key='open_github', button_color=('black', 'white')),
-                sg.Button(key='open_twitter', button_color=('white', 'white'), image_filename=twitter_png, image_size=(26,26)),
-                sg.Text('', size=(1,1)),
+                sg.Text('', size=(25,1)),
+                sg.Image(str(github_png)),
+                sg.Button('apscale', button_color=('black', 'white'), key='open_apscale_github'),
+                sg.Button('GUI', button_color=('black', 'white'), key='open_apscale_gui_github'),
+                sg.Text('', size=(2,1)),
+                sg.Image(str(twitter_png)),
+                sg.Button('TM', button_color=('black', 'white'), key='open_TM_twitter'),
+                sg.Button('DB', button_color=('black', 'white'), key='open_DB_twitter'),
+                sg.Text('', size=(4,1)),
                 sg.Text(meta_tools_version, font=('Arial', 8))]]
 
     # Create the Window
@@ -559,11 +564,17 @@ def main():
                     MP_window.UnHide()
                 MP_window.UnHide()
 
-            if event == 'open_twitter':
+            if event == 'open_TM_twitter':
                 webbrowser.open('https://twitter.com/TillMacher')
 
-            if event == 'open_github':
+            if event == 'open_DB_twitter':
+                webbrowser.open('https://twitter.com/buchner_dominik')
+
+            if event == 'open_apscale_gui_github':
                 webbrowser.open('https://github.com/TillMacher/apscale_gui')
+
+            if event == 'open_apscale_github':
+                webbrowser.open('https://github.com/DominikBuchner/apscale')
 
         ###########################################################
             try:
