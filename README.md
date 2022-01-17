@@ -8,7 +8,7 @@ denoising. It uses a Graphical interface and is configured via a single configur
 It automatically uses the available ressources on the machine it runs on while still providing the option
 to use less if desired.
 
-For more information on the pipeline running in the background visit [apscale](https://github.com/DominikBuchner/apscale)
+For more information on the pipeline running in the background visit [apscale](https://github.com/DominikBuchner/apscale).
 
 ## Installation
 
