@@ -21,7 +21,7 @@ from apscale_gui.summary_stats import main as summary_stats
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-meta_tools_version = 'Version 0.5'
+meta_tools_version = 'Version 0.6'
 
 ##########################################################################################################################
 # general functions
@@ -58,7 +58,7 @@ def main():
     tagging_templates_path = Path(pkg_resources.resource_filename(__name__, 'user_data/tagging_templates/'))
 
     ## define paths to files
-    user_data_txt = Path(pkg_resources.resource_filename(__name__, 'user_data/user_data.txt'))
+    user_data_txt = Path(pkg_resources.resource_filename(__name__, '_user_data/user_data.txt'))
     primer_sheet_xlsx = Path(pkg_resources.resource_filename(__name__, 'user_data/primer_trimming/primer_sheet.xlsx/'))
     ESV_reference_fasta_path = Path(pkg_resources.resource_filename(__name__, 'user_data/ESV_references/'))
 
