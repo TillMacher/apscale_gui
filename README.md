@@ -72,14 +72,13 @@ and it should return the version number, for example:
 
 ## Tutorial
 ### Creating a new project
-![]( width="60%" height="50%")
-![]<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="50%" height="50%">
+![]<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="50%" height="50%">
 
 ### The interace
-![](/_data/apscale_gui.png=250x250)
+![]<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="50%" height="50%">
 
 ### Running apscale
-![](/_data/apscale_run.png=250x250)
+![]<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_run.png" width="50%" height="50%">
 
 ## Output
 
