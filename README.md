@@ -88,7 +88,7 @@ Already existing project folders can be loaded from here in the future.
 
 In this case a new, blank project folder was created.
 
-<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="50%" height="50%">
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="30%" height="30%">
 
 ### The interace
 When loading a project you will be greeted by the APSCALE home window.
@@ -96,7 +96,7 @@ When loading a project you will be greeted by the APSCALE home window.
 From here a multiude of DNA metabarcoding related tools can be started.
 
 Check out the Tutorual for a more detailed overview of the respective tools (COMING SOON).
-<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="50%" height="50%">
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="60%" height="60%">
 
 ### Running apscale: All-in-One Analysis
 The APSCALE pipeline can easily be started via the All-in-One window.
