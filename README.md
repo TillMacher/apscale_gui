@@ -72,12 +72,13 @@ and it should return the version number, for example:
 
 ## Tutorial
 ### Creating a new project
-
+![](/_data/github_start.png "figure*1")
 
 ### The interace
-
+![](/_data/github_gui.png "figure*2")
 
 ### Running apscale
+![](/_data/github_run.png "figure*3")
 
 ## Output
 
