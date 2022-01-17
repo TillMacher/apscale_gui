@@ -12,7 +12,10 @@ def clean_up_data(path_to_outdirs):
 
     ## remove data
     for folder in folders:
+        Path
         [os.remove(i) for i in glob.glob(str(path_to_outdirs) + '/' + folder + '/data/*.gz')]
+        [os.remove(i) for i in glob.glob(str(path_to_outdirs) + '/' + folder + '/data/*.fasta')]
+        [os.remove(i) for i in glob.glob(str(path_to_outdirs) + '/' + folder + '/data/*.fastq')]
 
     ## calculate safed storage space
     size_after = sum(f.stat().st_size for f in path_to_outdirs.glob('**/*') if f.is_file())

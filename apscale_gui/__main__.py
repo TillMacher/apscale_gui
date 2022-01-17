@@ -10,9 +10,13 @@ from apscale.d_quality_filtering import main as quality_filtering
 from apscale.e_dereplication_pooling import main as dereplication_pooling
 from apscale.f_otu_clustering import main as otu_clustering
 from apscale.g_denoising import main as g_denoising
-from metaprocessor.settings_integrity import settings_integrity
-from metaprocessor.clean_up_data import clean_up_data
-from metaprocessor.fastq_eestats import main as fastq_eestats
+from apscale_gui.settings_integrity import settings_integrity
+from apscale_gui.clean_up_data import clean_up_data
+from apscale_gui.fastq_eestats import main as fastq_eestats
+from apscale.a_create_project import create_project
+from apscale_gui.blast_utilities import subset_fasta
+from apscale_gui.blast_utilities import blast_xml_to_taxonomy
+from apscale_gui.summary_stats import main as summary_stats
 
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
@@ -66,10 +70,10 @@ def main():
     sample_renaming_png = Path(pkg_resources.resource_filename(__name__, '/_source/sample_renaming.png'))
     demultiplexing_png = Path(pkg_resources.resource_filename(__name__, '/_source/demultiplexing.png'))
     all_in_one_analysis_png = Path(pkg_resources.resource_filename(__name__, '/_source/all_in_one_analysis.png'))
-    postprocessing_png = Path(pkg_resources.resource_filename(__name__, '/_source/postprocessing.png'))
+    local_blast_png = Path(pkg_resources.resource_filename(__name__, '/_source/local_blast.png'))
     ncbi_blast_png = Path(pkg_resources.resource_filename(__name__, '/_source/ncbi_blast.png'))
     boldigger_png = Path(pkg_resources.resource_filename(__name__, '/_source/boldigger.png'))
-    analysis_statistics_png = Path(pkg_resources.resource_filename(__name__, '/_source/analysis_statistics.png'))
+    summary_statistics_png = Path(pkg_resources.resource_filename(__name__, '/_source/summary_statistics.png'))
     log_file_png = Path(pkg_resources.resource_filename(__name__, '/_source/log_file.png'))
 
     ## open user_data_txt to save the standard output put
@@ -128,13 +132,11 @@ def main():
                 ## define output path and project folder
                 project_folder = projects_main_path + '/' + values['new_project_folder'].replace(' ', '_')
                 ## create a new project folder
-                from apscale.a_create_project import create_project
                 create_project(project_folder)
                 break
             else:
                 project_folder = 'Default_project'
                 ## create a new project folder
-                from apscale.a_create_project import create_project
                 create_project(project_folder)
                 break
 
@@ -186,16 +188,16 @@ def main():
                         sg.Button(key='open_demultiplexing', button_color=('white', 'white'), image_filename=demultiplexing_png)],
                         # row 2
                         [sg.Button(key='open_run_analyses', button_color=('white', 'white'), image_filename=all_in_one_analysis_png),
-                        sg.Button(key='open_postprocessing', button_color=('white', 'white'), image_filename=postprocessing_png),
+                        sg.Button(key='open_local_blast', button_color=('white', 'white'), image_filename=local_blast_png),
                         sg.Button(key='open_ncbi_blast', button_color=('white', 'white'), image_filename=ncbi_blast_png)],
                         # row 3
                         [sg.Button(key='open_boldigger', button_color=('white', 'white'), image_filename=boldigger_png),
-                        sg.Button(key='open_analysis_statistics', button_color=('white', 'white'), image_filename=analysis_statistics_png),
+                        sg.Button(key='open_analysis_statistics', button_color=('white', 'white'), image_filename=summary_statistics_png),
                         sg.Button(key='open_log_file', button_color=('white', 'white'), image_filename=log_file_png)],
                         ]
 
     ## define variables for the main window
-    welcome_text = datetime.datetime.now().strftime('%H:%M:%S') + ': Welcome to the MetaProcessor!\n'
+    welcome_text = datetime.datetime.now().strftime('%H:%M:%S') + ': Welcome to the APSCALE!\n'
 
     layout = [  [sg.Text('APSCALE', font=('Arial', 13, 'bold')),
                 sg.Text('Advanced Pipeline for Simple yet Comprehensive Analyses of DNA metabarcoding data')],
@@ -242,10 +244,11 @@ def main():
                     sg.PopupError('You have to install BOLDigger first!')
 
             if event == 'open_log_file':
-                try:
+                MP_window.hide()
+                answer = sg.PopupOKCancel('Open log file?', title='Log file')
+                if answer == 'OK':
                     open_file(Path(str(path_to_outdirs) + '/Project_report.xlsx'))
-                except:
-                    sg.PopupError('Log file not found!')
+                MP_window.UnHide()
 
             if event == 'open_run_analyses':
 
@@ -320,7 +323,7 @@ def main():
                 					[sg.Text('')],
 
                 					[sg.Text('',size=(1,1))],
-                                    [sg.Button('Run analysis', size=(10,2)), sg.CB('Minimize MetaProcessor', default=True, key='minimize_window')],
+                                    [sg.Button('Run analysis', size=(10,2)), sg.CB('Minimize APSCALE', default=True, key='minimize_window')],
                                     [sg.Text('',size=(1,1))],
                                     [sg.Button('Exit', button_color=('black', 'red'))]
                 					]
@@ -428,7 +431,7 @@ def main():
                                     [sg.Text('Batch size:'), sg.Input('150', size=(5,1), key='batch_size'), sg.Button('Run', key='subset_fasta')]
                                     ], title='Fasta subset')],
                 					[sg.Text('')],
-                                    [sg.Button('Create taxonomy table', size=(20,2), key=('fetch_taxonomy')), sg.CB('Minimize MetaProcessor', default=True, key='minimize_window')],
+                                    [sg.Button('Create taxonomy table', size=(20,2), key=('fetch_taxonomy')), sg.CB('Minimize APSCALE', default=True, key='minimize_window')],
                                     [sg.Text('',size=(1,1))],
                                     [sg.Button('Exit', button_color=('black', 'red'))]
                 					]
@@ -454,7 +457,6 @@ def main():
                             sg.PopupError('Please provide a fasta file!', title='Error')
                         else:
                             print('')
-                            from metaprocessor.blast_utilities import subset_fasta
                             subset_fasta(fasta_file, batch_size)
                             print('')
 
@@ -465,62 +467,58 @@ def main():
                             sg.PopupError('Please provide a read table!', title='Error')
                         else:
                             print('')
-                            from metaprocessor.blast_utilities import blast_xml_to_taxonomy
                             blast_xml_to_taxonomy(fasta_file, xml_files, read_table, limit)
                             print('')
 
                 blast_window.Close()
 
             if event == 'open_sample_renaming':
+                sg.Popup('Coming soon!', title='')
 
-                MP_window.hide()
-
-                layout_sample_renaming = [
-                					[sg.Text('NCBI BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
-                					[sg.Text('_'*115)],
-                                    [sg.Text('Folder:', size=(20,1)), sg.Input('', size=(30,1), key='data_folder'), sg.FolderBrowse('Browse', initial_folder = path_to_outdirs)],
-                                    [sg.Button('Create rename sheet')],
-                					[sg.Text('')],
-                                    [sg.Text('Rename sheet:', size=(20,1)), sg.Input('', size=(30,1), key='rename_sheet'), sg.FileBrowse('Browse', initial_folder = path_to_outdirs)],
-                                    [sg.Button('Rename samples')],
-                                    [sg.Text('',size=(1,1))],
-                                    [sg.Button('Exit', button_color=('black', 'red'))]
-                					]
-
-                # create the demultiplexing window
-                renaming_window = sg.Window('Sample renaming', layout_sample_renaming, keep_on_top=False)
-                while (True):
-                    ######################################
-                    event, values2 = renaming_window.Read()
-                    ######################################
-
-                    if event in ('Exit', None):
-                        break
-
-                    if event == 'Create rename sheet':
-                        print('')
-                        from metaprocessor.rename_samples import create_rename_sheet
-                        create_rename_sheet(values2['data_folder'], path_to_outdirs)
-                        print('')
-
-                    if event == 'Rename samples':
-                        print('')
-                        from metaprocessor.rename_samples import rename_samples
-                        rename_samples(values2['rename_sheet'])
-                        print('')
-
-                renaming_window.Close()
+                # MP_window.hide()
+                #
+                # layout_sample_renaming = [
+                # 					[sg.Text('NCBI BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
+                # 					[sg.Text('_'*115)],
+                #                     [sg.Text('Folder:', size=(20,1)), sg.Input('', size=(30,1), key='data_folder'), sg.FolderBrowse('Browse', initial_folder = path_to_outdirs)],
+                #                     [sg.Button('Create rename sheet')],
+                # 					[sg.Text('')],
+                #                     [sg.Text('Rename sheet:', size=(20,1)), sg.Input('', size=(30,1), key='rename_sheet'), sg.FileBrowse('Browse', initial_folder = path_to_outdirs)],
+                #                     [sg.Button('Rename samples')],
+                #                     [sg.Text('',size=(1,1))],
+                #                     [sg.Button('Exit', button_color=('black', 'red'))]
+                # 					]
+                #
+                # # create the demultiplexing window
+                # renaming_window = sg.Window('Sample renaming', layout_sample_renaming, keep_on_top=False)
+                # while (True):
+                #     ######################################
+                #     event, values2 = renaming_window.Read()
+                #     ######################################
+                #
+                #     if event in ('Exit', None):
+                #         break
+                #
+                #     if event == 'Create rename sheet':
+                #         print('')
+                #         create_rename_sheet(values2['data_folder'], path_to_outdirs)
+                #         print('')
+                #
+                #     if event == 'Rename samples':
+                #         print('')
+                #         rename_samples(values2['rename_sheet'])
+                #         print('')
+                #
+                # renaming_window.Close()
 
             if event == 'open_quality_control':
 
                 MP_window.hide()
 
                 quality_control_layout = [
-                                    [sg.Text('Quality control')],
-                                    [sg.Text()],
-                                    [sg.Text('Choose a folder:'), sg.DropDown(['1_raw data','2_demultiplexing', '3_PE_merging', '4_primer_trimming'], default_value='2_demultiplexing', key='raw_reads_analysis_folder')],
-                                    [sg.Text('Analyse raw reads:'), sg.Button('Run', key='run_analyse_raw_reads')],
-                                    [sg.Button('Exit')]
+                					[sg.Text('Collect summary statistics for this project?')],
+                                    [sg.Text('Folder:'), sg.DropDown(['1_raw data','2_demultiplexing', '3_PE_merging', '4_primer_trimming'], default_value='2_demultiplexing', key='raw_reads_analysis_folder')],
+                                    [sg.Button('OK', key='run_analyse_raw_reads'), sg.Button('Cancel')]
                 					]
 
                 # create the demultiplexing window
@@ -530,15 +528,38 @@ def main():
                     event, values2 = quality_control_window.Read()
                     ######################################
 
-                    if event in ('Exit', None):
+                    if event in ('Cancel', None):
                         break
 
                     if event == 'run_analyse_raw_reads':
+                        ## hide window
+                        quality_control_window.hide()
+                        quality_control_window.refresh()
+
                         print('Starting raw read analysis.')
                         fastq_eestats(values2['raw_reads_analysis_folder'], path_to_outdirs)
                         print('')
 
+                        ## finish script
+                        sg.Popup('Finished quality control\nAll plots are found in the 0_statistics folder.')
+
+                        ## unhide window
+                        quality_control_window.UnHide()
+
                 quality_control_window.Close()
+
+            if event == 'open_local_blast':
+                sg.Popup('Coming soon!', title='')
+
+            if event == 'open_analysis_statistics':
+                MP_window.hide()
+                answer = sg.PopupOKCancel('Collect summary statistics for this project?', title='Summary statistics')
+                if answer == 'OK':
+                    summary_stats(path_to_outdirs)
+                    sg.Popup('Finished building summary statistics plots.\nAll plots are found in the 0_statistics folder.')
+                    print('')
+                    MP_window.UnHide()
+                MP_window.UnHide()
 
         ###########################################################
             try:
