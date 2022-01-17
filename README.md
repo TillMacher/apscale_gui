@@ -101,7 +101,7 @@ Check out the Tutorual for a more detailed overview of the respective tools (COM
 ### Running apscale: All-in-One Analysis
 The APSCALE pipeline can easily be started via the All-in-One window.
 
-Simply select the steps to run, click on 'Run analyis' and and lean back!
+Simply select the steps to run, click on 'Run analysis' and and lean back!
 <img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_run.png" width="50%" height="50%">
 
 ## Output
