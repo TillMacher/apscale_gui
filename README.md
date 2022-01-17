@@ -87,6 +87,7 @@ Now create a new project using the GUI by typing your desired name of the projec
 Already existing project folders can be loaded from here in the future.
 
 In this case a new, blank project folder was created.
+
 <img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="50%" height="50%">
 
 ### The interace
