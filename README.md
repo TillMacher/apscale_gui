@@ -72,25 +72,35 @@ and it should return the version number, for example:
 
 ## Tutorial
 ### Creating a new project
-Create a new folder (e.g. on your desktop) and name it for example: 'My_new_project'.
+Create a new folder (e.g. on your desktop) and name it for example: 'APSCALE_projects'.
+
 Now run the APSCALE GUI with: 
+
 `python -m apscale_gui`
+
 You will be asked to select an output directory.
-Select the folder you just created.
-Now create a project using the GUI by typing the name of a new project.
-Already existing project folders can be loaded from here.
-A blank project folder will be created.
+
+Select the folder you just created ('APSCALE_projects').
+
+Now create a new project using the GUI by typing your desired name of the project (e.g. My_new_project'). A new folder in your output directory will be created.
+
+Already existing project folders can be loaded from here in the future.
+
+In this case a new, blank project folder was created.
 <img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="50%" height="50%">
 
 ### The interace
 When loading a project you will be greeted by the APSCALE home window.
+
 From here a multiude of DNA metabarcoding related tools can be started.
+
 Check out the Tutorual for a more detailed overview of the respective tools (COMING SOON).
 <img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="50%" height="50%">
 
 ### Running apscale: All-in-One Analysis
 The APSCALE pipeline can easily be started via the All-in-One window.
-Simply select the steps to run and lean back!
+
+Simply select the steps to run, click on 'Run analyis' and and lean back!
 <img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_run.png" width="50%" height="50%">
 
 ## Output
