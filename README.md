@@ -88,7 +88,7 @@ Already existing project folders can be loaded from here in the future.
 
 In this case a new, blank project folder was created.
 
-<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="30%" height="30%">
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="40%" height="40%">
 
 ### The interace
 When loading a project you will be greeted by the APSCALE home window.
