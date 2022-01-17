@@ -8,7 +8,7 @@ denoising. It uses a Graphical interface and is configured via a single configur
 It automatically uses the available ressources on the machine it runs on while still providing the option
 to use less if desired.
 
-For more information on the pipeline running in the background visit [apscale](https://github.com/DominikBuchner/apscale)
+For more information on the pipeline running in the background visit [apscale](https://github.com/DominikBuchner/apscale).
 
 ## Installation
 
@@ -72,15 +72,41 @@ and it should return the version number, for example:
 
 ## Tutorial
 ### Creating a new project
-![](/_data/apscale_start.png "figure*1" =250x250)
+Create a new folder (e.g. on your desktop) and name it for example: 'APSCALE_projects'.
+
+Now run the APSCALE GUI with: 
+
+`python -m apscale_gui`
+
+You will be asked to select an output directory.
+
+Select the folder you just created ('APSCALE_projects').
+
+Now create a new project using the GUI by typing your desired name of the project (e.g. My_new_project'). A new folder in your output directory will be created.
+
+Already existing project folders can be loaded from here in the future.
+
+In this case a new, blank project folder was created.
+
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="40%" height="40%">
 
 ### The interace
-![](/_data/apscale_gui.png "figure*2" =250x250)
+When loading a project you will be greeted by the APSCALE home window.
 
-### Running apscale
-![](/_data/apscale_run.png "figure*3" =250x250)
+From here a multitude of DNA metabarcoding related tools can be started.
+
+Check out the Tutorial for a more detailed overview of the respective tools (COMING SOON).
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="60%" height="60%">
+
+### Running apscale: All-in-One Analysis
+The APSCALE pipeline can easily be started via the All-in-One window.
+
+First, open the settings file (either from within the GUI or from the project folder). Then adjust all settings according to the data set.
+
+To run apscale, simply select the steps to run, click on 'Run analysis' and sit back and enjoy!
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_run.png" width="50%" height="50%">
 
 ## Output
 
 Apscale will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
-BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of Apscale to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database.
+BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of Apscale to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
