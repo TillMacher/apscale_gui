@@ -1,5 +1,5 @@
-# apscale graphical user interface
-Advanced Piepline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data
+# APSCALE graphical user interface
+Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data
 
 ## Introduction
 The Apscale Graphical User Interface is a metabarcoding pipeline that handles the most common tasks in metabarcoding
