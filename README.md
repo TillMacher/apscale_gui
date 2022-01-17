@@ -93,9 +93,9 @@ In this case a new, blank project folder was created.
 ### The interace
 When loading a project you will be greeted by the APSCALE home window.
 
-From here a multiude of DNA metabarcoding related tools can be started.
+From here a multitude of DNA metabarcoding related tools can be started.
 
-Check out the Tutorual for a more detailed overview of the respective tools (COMING SOON).
+Check out the Tutorial for a more detailed overview of the respective tools (COMING SOON).
 <img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="60%" height="60%">
 
 ### Running apscale: All-in-One Analysis
