@@ -17,7 +17,8 @@ setuptools.setup(
     install_requires = ['pySimpleGUI >= 4.15.2',
                         'apscale >= 1.0.6',
                         'demultiplexer >= 1.1.0',
-                        'boldigger >= 1.2.5'
+                        'boldigger >= 1.2.5',
+                        'plotly >= 4.9.0'
                         ],
     include_package_data = True,
     classifiers=[

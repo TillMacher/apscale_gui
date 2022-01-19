@@ -1,6 +1,5 @@
-import glob, sys, os, pkgutil, ast, multiprocessing, pkg_resources, datetime, psutil, subprocess
+import glob, sys, os, pkgutil, ast, pkg_resources, datetime, psutil, subprocess
 import PySimpleGUI as sg
-import matplotlib.pyplot as plt
 from pathlib import Path
 import pandas as pd
 import webbrowser
@@ -17,11 +16,14 @@ from apscale.a_create_project import create_project
 from apscale_gui.blast_utilities import subset_fasta
 from apscale_gui.blast_utilities import blast_xml_to_taxonomy
 from apscale_gui.summary_stats import main as summary_stats
+from apscale_gui.settings_file import load_settings
+from apscale_gui.settings_file import apply_settings
+
 
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-meta_tools_version = 'Version 0.6'
+meta_tools_version = 'Version 1.0.0'
 
 ##########################################################################################################################
 # general functions
@@ -257,44 +259,47 @@ def main():
 
                 MP_window.hide()
 
+                settings_list = load_settings(settings_file)
+
                 modify_settings_sheet = [[
                     sg.Text('Load settings file and modify as required.'),
-                    sg.Button('Open', key='open_settings_file')
+                    sg.Button('Open settings file', key='open_settings_file'),
+                    sg.Button('Apply new settings', key='apply_new_settings'),
                     ]]
 
                 pe_merging_layout = [[
-                    sg.Text('Merge paired-end reads.'),
-                    sg.Button('Learn more')
+                    sg.Text('maxdiffpct:'), sg.Input(settings_list[2], key='settings_maxdiffpct', size=(5,1)),
+                    sg.Text('maxdiffs:'), sg.Input(settings_list[3], key='settings_maxdiffs', size=(5,1)),
+                    sg.Text('minovlen:'), sg.Input(settings_list[4], key='settings_minovlen', size=(5,1))
                     ]]
 
                 primer_trimming_layout = [[
-                    sg.Text('Trim adapters or primers.'),
-                    sg.Button('Learn more')
+                    sg.Text("P5 Primer (5' - 3'):"), sg.Input(settings_list[5], key='settings_p5_primer', size=(20,1)),
+                    sg.Text("P7 Primer (5' - 3'):"), sg.Input(settings_list[6], key='settings_p7_primer', size=(20,1)),
+                    sg.Text('Anchoring:'), sg.Combo(['True', 'False'], key='settings_anchoring', default_value=settings_list[7])
                     ]]
 
                 read_filter_layout = [[
-                    sg.Text('Filter by per-base quality and length.'),
-                    sg.Button('Learn more')
+                    sg.Text('maxEE:'), sg.Input(settings_list[8], key='settings_maxEE', size=(4,1)),
+                    sg.Text('min length:'), sg.Input(settings_list[9], key='settings_min_length', size=(5,1)),
+                    sg.Text('max length:'), sg.Input(settings_list[10], key='settings_max_length', size=(5,1))
                     ]]
 
                 pre_processing_layout = [[
-                    sg.Text('Dereplicate and pool all reads.'),
-                    sg.Button('Learn more')
-                    ]]
-
-                denoising_layout = [[
-                    sg.Text('Perfom denoising to create Exact Sequence Variants (ESVs).'),
-                    sg.Button('Learn more')
+                    sg.Text('No settings required.'),
                     ]]
 
                 clustering_layout = [[
-                    sg.Text('Perfom clustering to create Operational taxonomic units (OTUs).'),
-                    sg.Button('Learn more')
+                    sg.Text('pct id:'), sg.Input(settings_list[11], key='settings_pct_id', size=(5,1))
+                    ]]
+
+                denoising_layout = [[
+                    sg.Text('alpha:'), sg.Input(settings_list[12], key='settings_alpha', size=(5,1)),
+                    sg.Text('min size:'), sg.Input(settings_list[13], key='settings_min_size', size=(5,1))
                     ]]
 
                 clean_up_layout = [[
                     sg.Text('Remove all temporary data to safe storage space.'),
-                    sg.Button('Learn more')
                 ]]
 
                 layout_run_analyses = [
@@ -316,10 +321,10 @@ def main():
                                     [sg.CB('', default=True, key='cb_dereplication_pooling'), sg.Text('5. Dereplication & pooling', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=pre_processing_layout, title='')],
                 					[sg.Text('')],
 
-                                    [sg.CB('', default=True, key='cb_denoising'), sg.Text('6.1 Denoising', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=denoising_layout, title='')],
+                                    [sg.CB('', default=True, key='cb_otu_clustering'), sg.Text('6.1 OTU clustering', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=clustering_layout, title='')],
                 					[sg.Text('')],
 
-                                    [sg.CB('', default=True, key='cb_otu_clustering'), sg.Text('6.2 OTU clustering', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=clustering_layout, title='')],
+                                    [sg.CB('', default=True, key='cb_denoising'), sg.Text('6.2 Denoising', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=denoising_layout, title='')],
                 					[sg.Text('')],
 
                                     [sg.CB('', default=False, key='cb_clean_up'), sg.Text('Data clean-up', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=clean_up_layout, title='')],
@@ -342,6 +347,13 @@ def main():
                     if event in ('Exit', None):
                         break
 
+                    if event == 'apply_new_settings':
+                        settings = [values2[i] for i in list(values2.keys()) if 'settings_' in str(i)]
+                        answer = sg.PopupOKCancel('Warning: This will overwrite the settings file!', title='Warning')
+                        if answer == 'OK':
+                            apply_settings(settings_file, settings)
+                            sg.Popup('New settings have been applied.', title='')
+
                     if event == 'open_settings_file':
                         open_file(settings_file)
 
@@ -353,7 +365,8 @@ def main():
 
                         ## check the settings file for integrity
                         test = settings_integrity(settings_file)
-                        if test != False:
+
+                        if test != False and test != 'Cancel':
                             ## continue with pipeline only if settings file is legit
                             print('')
 
