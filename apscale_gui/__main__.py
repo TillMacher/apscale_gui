@@ -491,42 +491,6 @@ def main():
             if event == 'open_sample_renaming':
                 sg.Popup('Coming soon!', title='')
 
-                # MP_window.hide()
-                #
-                # layout_sample_renaming = [
-                # 					[sg.Text('NCBI BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
-                # 					[sg.Text('_'*115)],
-                #                     [sg.Text('Folder:', size=(20,1)), sg.Input('', size=(30,1), key='data_folder'), sg.FolderBrowse('Browse', initial_folder = path_to_outdirs)],
-                #                     [sg.Button('Create rename sheet')],
-                # 					[sg.Text('')],
-                #                     [sg.Text('Rename sheet:', size=(20,1)), sg.Input('', size=(30,1), key='rename_sheet'), sg.FileBrowse('Browse', initial_folder = path_to_outdirs)],
-                #                     [sg.Button('Rename samples')],
-                #                     [sg.Text('',size=(1,1))],
-                #                     [sg.Button('Exit', button_color=('black', 'red'))]
-                # 					]
-                #
-                # # create the demultiplexing window
-                # renaming_window = sg.Window('Sample renaming', layout_sample_renaming, keep_on_top=False)
-                # while (True):
-                #     ######################################
-                #     event, values2 = renaming_window.Read()
-                #     ######################################
-                #
-                #     if event in ('Exit', None):
-                #         break
-                #
-                #     if event == 'Create rename sheet':
-                #         print('')
-                #         create_rename_sheet(values2['data_folder'], path_to_outdirs)
-                #         print('')
-                #
-                #     if event == 'Rename samples':
-                #         print('')
-                #         rename_samples(values2['rename_sheet'])
-                #         print('')
-                #
-                # renaming_window.Close()
-
             if event == 'open_quality_control':
 
                 MP_window.hide()
