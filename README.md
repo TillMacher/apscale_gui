@@ -1,6 +1,10 @@
 # APSCALE graphical user interface
 Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data
 
+[![Downloads](https://pepy.tech/badge/apscale)](https://pepy.tech/project/apscale)  - Apscale
+
+[![Downloads](https://pepy.tech/badge/apscale_gui)](https://pepy.tech/project/apscale_gui)  - Apscale GUI
+
 ## Introduction
 The Apscale Graphical User Interface is a metabarcoding pipeline that handles the most common tasks in metabarcoding
 pipelines like paired-end merging, primer trimming, quality filtering, otu clustering and
