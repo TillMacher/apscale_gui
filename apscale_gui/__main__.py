@@ -18,12 +18,20 @@ from apscale_gui.blast_utilities import blast_xml_to_taxonomy
 from apscale_gui.summary_stats import main as summary_stats
 from apscale_gui.settings_file import load_settings
 from apscale_gui.settings_file import apply_settings
-
+from lastversion import lastversion
 
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-meta_tools_version = 'Version 1.0.0'
+apscale_version = '1.0.2'
+
+## check for the latest version of TTT
+try:
+    latest_version = lastversion.has_update(repo="https://pypi.org/project/apscale-gui/", at='pip', current_version=apscale_version)
+    if latest_version:
+        sg.Popup('Newer apscale GUI version is available: ' + str(latest_version) + "\nPlease update apscale GUI via pip!", title="Update available!")
+except:
+    pass
 
 ##########################################################################################################################
 # general functions
@@ -217,7 +225,7 @@ def main():
                 sg.Button('TM', button_color=('black', 'white'), key='open_TM_twitter'),
                 sg.Button('DB', button_color=('black', 'white'), key='open_DB_twitter'),
                 sg.Text('', size=(4,1)),
-                sg.Text(meta_tools_version, font=('Arial', 8))]]
+                sg.Text('Version: ' + str(apscale_version), font=('Arial', 8))]]
 
     # Create the Window
     MP_window = sg.Window('APSCALE', layout)
@@ -264,7 +272,7 @@ def main():
                 modify_settings_sheet = [[
                     sg.Text('Load settings file and modify as required.'),
                     sg.Button('Open settings file', key='open_settings_file'),
-                    sg.Button('Apply new settings', key='apply_new_settings'),
+                    sg.Button('Apply new settings', key='apply_new_settings', button_color=('black', 'lightgreen')),
                     ]]
 
                 pe_merging_layout = [[
@@ -347,6 +355,80 @@ def main():
                     if event in ('Exit', None):
                         break
 
+                    if event == 'Run analysis':
+                        ## check if settings from GUI and settings file match
+                        settings_list = load_settings(settings_file)
+                        settings_new = [values2[i] for i in list(values2.keys()) if 'settings_' in str(i)]
+
+                        ## only proceed if settings have been applied from gui to sheet
+                        if settings_list[2:] == settings_new:
+                            ######################################
+                            if values2['minimize_window'] == True:
+                                tools_window.hide()
+                                tools_window.refresh()
+
+                            ## check the settings file for integrity
+                            test = settings_integrity(settings_file)
+
+                            if test != False and test != 'Cancel':
+                                ## continue with pipeline only if settings file is legit
+                                print('')
+
+                                ############################################################################
+                                if values2['cb_pe_merging'] == True:
+                                    print('Starting paired-end merging')
+                                    pe_merging_main(str(path_to_outdirs))
+                                    print('')
+
+                                if values2['cb_primer_trimming'] == True:
+                                    print('Starting primer trimming')
+                                    primer_trimming(str(path_to_outdirs))
+                                    print('')
+
+                                if values2['cb_quality_filtering'] == True:
+                                    print('Starting quality filtering')
+                                    quality_filtering(str(path_to_outdirs))
+                                    print('')
+
+                                if values2['cb_dereplication_pooling'] == True:
+                                    print('Starting dereplication and pooling')
+                                    dereplication_pooling(str(path_to_outdirs))
+                                    print('')
+
+                                if values2['cb_otu_clustering'] == True:
+                                    print('Starting OTU clustering')
+                                    otu_clustering(str(path_to_outdirs))
+                                    print('')
+
+                                if values2['cb_denoising'] == True:
+                                    print('Starting denoising')
+                                    g_denoising(str(path_to_outdirs))
+                                    print('')
+
+                                if values2['cb_clean_up'] == True:
+                                    answer = sg.PopupOKCancel('Warning: You selected the data clean-up:\nThis will erase excess data permanently. Raw reads and pooled reads will be kept!', title='Warning')
+                                    if answer == 'OK':
+                                        print('Cleaning up the working directory.')
+                                        clean_up_data(path_to_outdirs)
+                                        print('')
+
+                            ############################################################################
+
+                            ######################################
+                            ## finish the command chain
+                            finished = sg.PopupYesNo('Jobs finished!\n\nContinue analyses?', title='')
+                            if finished == 'No':
+                                break
+                                tools_window.Close()
+                            elif values2['minimize_window'] == True:
+                                tools_window.UnHide()
+
+                            elif values2['minimize_window'] == True:
+                                tools_window.UnHide()
+
+                        else:
+                            sg.PopupOK('Please apply new settings to proceed!', title='Error')
+
                     if event == 'apply_new_settings':
                         settings = [values2[i] for i in list(values2.keys()) if 'settings_' in str(i)]
                         answer = sg.PopupOKCancel('Warning: This will overwrite the settings file!', title='Warning')
@@ -356,71 +438,6 @@ def main():
 
                     if event == 'open_settings_file':
                         open_file(settings_file)
-
-                    if event == 'Run analysis':
-                        ######################################
-                        if values2['minimize_window'] == True:
-                            tools_window.hide()
-                            tools_window.refresh()
-
-                        ## check the settings file for integrity
-                        test = settings_integrity(settings_file)
-
-                        if test != False and test != 'Cancel':
-                            ## continue with pipeline only if settings file is legit
-                            print('')
-
-                            ############################################################################
-                            if values2['cb_pe_merging'] == True:
-                                print('Starting paired-end merging')
-                                pe_merging_main(str(path_to_outdirs))
-                                print('')
-
-                            if values2['cb_primer_trimming'] == True:
-                                print('Starting primer trimming')
-                                primer_trimming(str(path_to_outdirs))
-                                print('')
-
-                            if values2['cb_quality_filtering'] == True:
-                                print('Starting quality filtering')
-                                quality_filtering(str(path_to_outdirs))
-                                print('')
-
-                            if values2['cb_dereplication_pooling'] == True:
-                                print('Starting dereplication and pooling')
-                                dereplication_pooling(str(path_to_outdirs))
-                                print('')
-
-                            if values2['cb_otu_clustering'] == True:
-                                print('Starting OTU clustering')
-                                otu_clustering(str(path_to_outdirs))
-                                print('')
-
-                            if values2['cb_denoising'] == True:
-                                print('Starting denoising')
-                                g_denoising(str(path_to_outdirs))
-                                print('')
-
-                            if values2['cb_clean_up'] == True:
-                                answer = sg.PopupOKCancel('Warning: You selected the data clean-up:\nThis will erase excess data permanently. Raw reads and pooled reads will be kept!', title='Warning')
-                                if answer == 'OK':
-                                    print('Cleaning up the working directory.')
-                                    clean_up_data(path_to_outdirs)
-                                    print('')
-
-                        ############################################################################
-
-                        ######################################
-                        ## finish the command chain
-                        finished = sg.PopupYesNo('Jobs finished!\n\nContinue analyses?', title='')
-                        if finished == 'No':
-                            break
-                            tools_window.Close()
-                        elif values2['minimize_window'] == True:
-                            tools_window.UnHide()
-
-                        elif values2['minimize_window'] == True:
-                            tools_window.UnHide()
 
                     if event == 'modify_primer_sheet':
                         open_file(primer_sheet_xlsx)

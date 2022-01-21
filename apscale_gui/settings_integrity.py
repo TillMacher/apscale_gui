@@ -1,6 +1,8 @@
 import pandas as pd
 import PySimpleGUI as sg
 
+file = '/Users/tillmacher/Metaprocessor_Projects/zz/Settings.xlsx'
+
 def settings_integrity(file):
     " Check the settings file for integrity and errors "
 
@@ -23,7 +25,7 @@ def settings_integrity(file):
         settings_list = settings_list + [str(i) + ' = ' + str(df[i][0]) + '\n' for i in df.columns.values.tolist()]
 
     if error_list != []:
-        sg.PopupOK('Found missing data following sheet(s):', '; '.join(lst), 'Please add the missing information to continue!', title='Warning!')
+        sg.PopupOK('Found missing data following sheet(s):', '; '.join(error_list), 'Please add the missing information to continue!', title='Warning!')
         return False
 
     return sg.PopupOKCancel(' '.join(settings_list), title='Settings')
