@@ -21,7 +21,7 @@ def plot_reads_processing(file):
         y_values = [i.replace('_PE.fastq.gz', '') for i in df['File'].values.tolist()]
 
         fig = go.Figure(data=[
-            go.Bar(name='Merged', x=x1_values, y=y_values, orientation='h', marker_color='Teal'),
+            go.Bar(name='Merged', x=x1_values, y=y_values, orientation='h', marker_color='LightBlue'),
             go.Bar(name='Discarded', x=x2_values, y=y_values, orientation='h', marker_color='Orange')])
         fig.update_layout(barmode='stack', template='plotly_white', width=1000, height=1000)
         fig.update_xaxes(title='reads (%)')
@@ -34,7 +34,7 @@ def plot_reads_processing(file):
         y_values = [i.replace('_PE.fastq.gz', '') for i in df['File'].values.tolist()]
 
         fig = go.Figure(data=[
-            go.Bar(name='Trimmed', x=x1_values, y=y_values, orientation='h', marker_color='Teal'),
+            go.Bar(name='Trimmed', x=x1_values, y=y_values, orientation='h', marker_color='LightBlue'),
             go.Bar(name='Discarded', x=x2_values, y=y_values, orientation='h', marker_color='Orange')])
         fig.update_layout(barmode='stack', template='plotly_white', width=1000, height=1000)
         fig.update_xaxes(title='reads (%)')
@@ -47,7 +47,7 @@ def plot_reads_processing(file):
         y_values = [i.replace('_PE.fastq.gz', '') for i in df['File'].values.tolist()]
 
         fig = go.Figure(data=[
-            go.Bar(name='Passed', x=x1_values, y=y_values, orientation='h', marker_color='Teal'),
+            go.Bar(name='Passed', x=x1_values, y=y_values, orientation='h', marker_color='LightBlue'),
             go.Bar(name='Discarded', x=x2_values, y=y_values, orientation='h', marker_color='Orange')])
         fig.update_layout(barmode='stack', template='plotly_white', width=1000, height=1000)
         fig.update_xaxes(title='reads (%)')
@@ -60,7 +60,7 @@ def plot_reads_processing(file):
         y_values = [i.replace('_PE.fastq.gz', '') for i in df['File'].values.tolist()]
 
         fig = go.Figure(data=[
-            go.Bar(name='Unique', x=x1_values, y=y_values, orientation='h', marker_color='Teal'),
+            go.Bar(name='Unique', x=x1_values, y=y_values, orientation='h', marker_color='LightBlue'),
             go.Bar(name='Non-unique', x=x2_values, y=y_values, orientation='h', marker_color='Orange')])
         fig.update_layout(barmode='stack', template='plotly_white', width=1000, height=1000)
         fig.update_xaxes(title='sequences (%)')
