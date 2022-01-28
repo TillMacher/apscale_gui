@@ -9,7 +9,6 @@ from apscale.d_quality_filtering import main as quality_filtering
 from apscale.e_dereplication_pooling import main as dereplication_pooling
 from apscale.f_otu_clustering import main as otu_clustering
 from apscale.g_denoising import main as g_denoising
-from apscale_gui.settings_integrity import settings_integrity
 from apscale_gui.clean_up_data import clean_up_data
 from apscale_gui.fastq_eestats import main as fastq_eestats
 from apscale.a_create_project import create_project
@@ -18,12 +17,15 @@ from apscale_gui.blast_utilities import blast_xml_to_taxonomy
 from apscale_gui.summary_stats import main as summary_stats
 from apscale_gui.settings_file import load_settings
 from apscale_gui.settings_file import apply_settings
+from apscale_gui.settings_file import settings_integrity
+from apscale_gui.rename_files import create_rename_sheet
+from apscale_gui.rename_files import rename_files
 from lastversion import lastversion
 
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.0.2'
+apscale_version = '1.0.4'
 
 ## check for the latest version of TTT
 try:
@@ -276,9 +278,9 @@ def main():
                     ]]
 
                 pe_merging_layout = [[
-                    sg.Text('maxdiffpct:'), sg.Input(settings_list[2], key='settings_maxdiffpct', size=(5,1)),
-                    sg.Text('maxdiffs:'), sg.Input(settings_list[3], key='settings_maxdiffs', size=(5,1)),
-                    sg.Text('minovlen:'), sg.Input(settings_list[4], key='settings_minovlen', size=(5,1))
+                    sg.Text('maxdiffpct:'), sg.Spin([i for i in range(1,101)], initial_value=settings_list[2], key='settings_maxdiffpct', size=(6,1)),
+                    sg.Text('maxdiffs:'), sg.Spin([i for i in range(1,200)], initial_value=settings_list[3], key='settings_maxdiffs', size=(6,1)),
+                    sg.Text('minovlen:'), sg.Spin([i for i in range(1,26)], initial_value=settings_list[4], key='settings_minovlen', size=(6,1))
                     ]]
 
                 primer_trimming_layout = [[
@@ -289,21 +291,21 @@ def main():
 
                 read_filter_layout = [[
                     sg.Text('maxEE:'), sg.Input(settings_list[8], key='settings_maxEE', size=(4,1)),
-                    sg.Text('min length:'), sg.Input(settings_list[9], key='settings_min_length', size=(5,1)),
-                    sg.Text('max length:'), sg.Input(settings_list[10], key='settings_max_length', size=(5,1))
+                    sg.Text('min length:'), sg.Input(settings_list[9], key='settings_min_length', size=(6,1)),
+                    sg.Text('max length:'), sg.Input(settings_list[10], key='settings_max_length', size=(6,1))
                     ]]
 
                 pre_processing_layout = [[
-                    sg.Text('No settings required.'),
+                    sg.Text('min size:'), sg.Spin([i for i in range(2,6)], initial_value=settings_list[11], key='settings_derep_minsize', size=(6,1)),
                     ]]
 
                 clustering_layout = [[
-                    sg.Text('pct id:'), sg.Input(settings_list[11], key='settings_pct_id', size=(5,1))
+                    sg.Text('pct id:'), sg.Spin([i for i in range(80,101)], initial_value=settings_list[12], key='settings_pct_id', size=(6,1))
                     ]]
 
                 denoising_layout = [[
-                    sg.Text('alpha:'), sg.Input(settings_list[12], key='settings_alpha', size=(5,1)),
-                    sg.Text('min size:'), sg.Input(settings_list[13], key='settings_min_size', size=(5,1))
+                    sg.Text('alpha:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[13], key='settings_alpha', size=(6,1)),
+                    sg.Text('min size:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[14], key='settings_min_size', size=(6,1))
                     ]]
 
                 clean_up_layout = [[
@@ -358,7 +360,7 @@ def main():
                     if event == 'Run analysis':
                         ## check if settings from GUI and settings file match
                         settings_list = load_settings(settings_file)
-                        settings_new = [values2[i] for i in list(values2.keys()) if 'settings_' in str(i)]
+                        settings_new = [str(values2[i]) for i in list(values2.keys()) if 'settings_' in str(i)]
 
                         ## only proceed if settings have been applied from gui to sheet
                         if settings_list[2:] == settings_new:
@@ -506,7 +508,47 @@ def main():
                 blast_window.Close()
 
             if event == 'open_sample_renaming':
-                sg.Popup('Coming soon!', title='')
+
+                MP_window.hide()
+
+                layout_sample_renaming = [
+                					[sg.Text('Sample renaming', size=(50,1), font=('Arial', 12, 'bold'))],
+                					[sg.Text('_'*115)],
+                                    [sg.Text('Select folder with files to rename:'), sg.Combo(['1_raw data', '2_demultiplexing'], default_value='1_raw data', key='rename_folder')],
+                                    [sg.Text('Paired-end reads:'), sg.Combo(['True', 'False'], default_value='True', key='paired_end_reads')],
+                                    [sg.Text('',size=(1,1))],
+                                    [sg.Button('Create rename sheet', key='run_create_rename_sheet'), sg.Button('Open rename sheet  ', key='run_open_rename_sheet')],
+                                    [sg.Button('Rename samples     ', key='run_rename_samples')],
+                                    [sg.Text('',size=(1,1))],
+                                    [sg.Button('Exit', button_color=('black', 'red'))]
+                					]
+
+                # create the demultiplexing window
+                rename_files_window = sg.Window('Rename files', layout_sample_renaming, keep_on_top=False)
+                while (True):
+                    ######################################
+                    event, values2 = rename_files_window.Read()
+                    ######################################
+
+                    if event in ('Exit', None):
+                        break
+
+                    if event == 'run_create_rename_sheet':
+                        create_rename_sheet(values2['paired_end_reads'], values2['rename_folder'], path_to_outdirs)
+                        answer = sg.PopupOKCancel('Finished.\nOpen rename sheet?', title='')
+                        if answer == 'OK':
+                            open_file(Path(str(path_to_outdirs) + '/rename_sheet.xlsx'))
+
+                    if event == 'run_open_rename_sheet':
+                        open_file(Path(str(path_to_outdirs) + '/rename_sheet.xlsx'))
+
+                    if event == 'run_rename_samples':
+                        answer = sg.PopupOKCancel('Warning this will overwrite ALL files from the rename sheet!\nThere is no going back!\nContinue?', title='Warning')
+                        if answer == 'OK':
+                            rename_files(values2['paired_end_reads'], path_to_outdirs)
+                            sg.Popup('All files were renamed accordingly.')
+
+                rename_files_window.Close()
 
             if event == 'open_quality_control':
 
