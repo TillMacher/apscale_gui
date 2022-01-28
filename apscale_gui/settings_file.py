@@ -37,7 +37,7 @@ def apply_settings(file, settings):
     df3 = pd.DataFrame([[settings_converted[6], settings_converted[7], settings_converted[8]]], columns=['maxEE', 'min length', 'max length'])
     df4 = pd.DataFrame([[settings_converted[9]]], columns=['min size to pool'])
     df5 = pd.DataFrame([[settings_converted[10]]], columns=['pct id'])
-    df6 = pd.DataFrame([[settings_converted[11], settings_converted[11]]], columns=['alpha', 'minsize'])
+    df6 = pd.DataFrame([[settings_converted[11], settings_converted[12]]], columns=['alpha', 'minsize'])
 
 
     # Create a Pandas Excel writer using XlsxWriter as the engine.

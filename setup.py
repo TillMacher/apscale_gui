@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="apscale_gui",
-    version="1.0.4",
+    version="1.0.5",
     author="Till-Hendrik Macher",
     author_email="till-hendrik.macher@uni-due.de",
     description="Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data - Graphical User Interface",
