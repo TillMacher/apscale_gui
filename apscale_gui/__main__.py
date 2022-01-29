@@ -25,7 +25,7 @@ from lastversion import lastversion
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.0.5'
+apscale_version = '1.0.6'
 
 ## check for the latest version of TTT
 try:
@@ -635,7 +635,7 @@ def main():
 
             ## create layout for the error message
             layout = [
-                        [sg.Image(crash_png), sg.Text(" You've been awarded with the gold medal in program crashing!")],
+                        [sg.Image(str(crash_png)), sg.Text(" You've been awarded with the gold medal in program crashing!")],
                         [sg.Text('', size=(1,1))],
                         [sg.Text('Unexpected error: ' + str(sys.exc_info()[0]))],
                         [sg.Text('', size=(1,1))],

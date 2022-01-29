@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="apscale_gui",
-    version="1.0.5",
+    version="1.0.6",
     author="Till-Hendrik Macher",
     author_email="till-hendrik.macher@uni-due.de",
     description="Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data - Graphical User Interface",
@@ -29,4 +29,9 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
+    entry_points = {
+        "console_scripts" : [
+            "apscale_gui = apscale_gui.__main__:main",
+        ]
+    },
 )

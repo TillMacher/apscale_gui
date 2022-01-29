@@ -95,19 +95,19 @@ def pipeline_stats_bar(Project_report, OTU_table, ESV_table, project):
     bar_5_2 = reads_total - bar_5_1
 
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=['PE merging'], y=[bar_1_1], marker_color='LightBlue'))
+    fig.add_trace(go.Bar(x=['PE merging'], y=[bar_1_1], marker_color='Blue'))
     fig.add_trace(go.Bar(x=['PE merging'], y=[bar_1_2], marker_color='Orange'))
 
-    fig.add_trace(go.Bar(x=['Primer trimming'], y=[bar_2_1], marker_color='LightBlue'))
+    fig.add_trace(go.Bar(x=['Primer trimming'], y=[bar_2_1], marker_color='Blue'))
     fig.add_trace(go.Bar(x=['Primer trimming'], y=[bar_2_2], marker_color='Orange'))
 
-    fig.add_trace(go.Bar(x=['Quality filtering'], y=[bar_3_1], marker_color='LightBlue'))
+    fig.add_trace(go.Bar(x=['Quality filtering'], y=[bar_3_1], marker_color='Blue'))
     fig.add_trace(go.Bar(x=['Quality filtering'], y=[bar_3_2], marker_color='Orange'))
 
-    fig.add_trace(go.Bar(x=['Denoising'], y=[bar_4_1], marker_color='LightBlue'))
+    fig.add_trace(go.Bar(x=['Denoising'], y=[bar_4_1], marker_color='Blue'))
     fig.add_trace(go.Bar(x=['Denoising'], y=[bar_4_2], marker_color='Orange'))
 
-    fig.add_trace(go.Bar(x=['OTU clustering'], y=[bar_5_1], marker_color='LightBlue'))
+    fig.add_trace(go.Bar(x=['OTU clustering'], y=[bar_5_1], marker_color='Blue'))
     fig.add_trace(go.Bar(x=['OTU clustering'], y=[bar_5_2], marker_color='Orange'))
 
     fig.update_layout(template='simple_white', width=800, height=500, showlegend=False, barmode='stack')
@@ -142,12 +142,12 @@ def pipeline_stats_box(Project_report, OTU_table, ESV_table, project):
     reads_6 = [sum(otu_clustering[sample].values.tolist()) for sample in otu_clustering.columns.tolist()]
 
     fig = go.Figure()
-    fig.add_trace(go.Box(y=reads_1, name='Raw reads', marker_color='LightBlue'))
-    fig.add_trace(go.Box(y=reads_2, name='PE merging', marker_color='LightBlue'))
-    fig.add_trace(go.Box(y=reads_3, name='Primer trimming', marker_color='LightBlue'))
-    fig.add_trace(go.Box(y=reads_4, name='Quality filtering', marker_color='LightBlue'))
-    fig.add_trace(go.Box(y=reads_5, name='Denoising', marker_color='LightBlue'))
-    fig.add_trace(go.Box(y=reads_6, name='OTU clustering', marker_color='LightBlue'))
+    fig.add_trace(go.Box(y=reads_1, name='Raw reads', marker_color='Blue'))
+    fig.add_trace(go.Box(y=reads_2, name='PE merging', marker_color='Blue'))
+    fig.add_trace(go.Box(y=reads_3, name='Primer trimming', marker_color='Blue'))
+    fig.add_trace(go.Box(y=reads_4, name='Quality filtering', marker_color='Blue'))
+    fig.add_trace(go.Box(y=reads_5, name='Denoising', marker_color='Blue'))
+    fig.add_trace(go.Box(y=reads_6, name='OTU clustering', marker_color='Blue'))
 
     fig.update_layout(template='simple_white', width=800, height=500, showlegend=False)
     fig.update_yaxes(title='Reads')
