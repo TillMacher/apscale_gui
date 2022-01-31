@@ -61,10 +61,20 @@ def fastq_eestats(file, folder, project = None):
     ## figure 2
     ## calculate the number of reads per base (i.e. length distriubution)
     n_recs = df['Recs'].values.tolist()[0]
-    len_dist_dict = {}
-    for i,j in df[['Pos', 'Recs']].values.tolist():
-        len_dist_dict[i] = n_recs - j
-        n_recs -= n_recs - j
+
+
+    if len(set(df['Recs'].values.tolist())) != 1:
+        ## if reads have different length, calculate the lenght distributions
+        len_dist_dict = {}
+        for i,j in df[['Pos', 'Recs']].values.tolist():
+            len_dist_dict[i] = n_recs - j
+            n_recs -= n_recs - j
+    else:
+        ## if all reads are the same length -> nothing to calculate
+        len_dist_dict = {}
+        for i,j in df[['Pos', 'Recs']].values.tolist():
+            len_dist_dict[i] = n_recs
+
     mean_ee = df['Mean_EE'].values.tolist()
     recs = df['Recs'].values.tolist()
     ee_1 = len(x_values)*[1]

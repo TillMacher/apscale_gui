@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="apscale_gui",
-    version="1.0.6",
+    version="1.0.7",
     author="Till-Hendrik Macher",
     author_email="till-hendrik.macher@uni-due.de",
     description="Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data - Graphical User Interface",
@@ -15,11 +15,12 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     license = 'MIT',
     install_requires = ['pySimpleGUI >= 4.15.2',
-                        'apscale >= 1.1.1',
+                        'apscale >= 1.2.0',
                         'demultiplexer >= 1.1.0',
                         'lastversion >= 1.3.3',
                         'boldigger >= 1.2.5',
                         'plotly >= 4.9.0',
+                        'kaleido >= 0.2.1',
                         'xlsxwriter >= 3.0.2'
                         ],
     include_package_data = True,
