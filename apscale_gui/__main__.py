@@ -145,11 +145,13 @@ def main():
                 project_folder = projects_main_path + '/' + values['new_project_folder'].replace(' ', '_')
                 ## create a new project folder
                 create_project(project_folder)
+                project_folder = project_folder + '_apscale'
                 break
             else:
                 project_folder = 'Default_project'
                 ## create a new project folder
                 create_project(project_folder)
+                project_folder = project_folder + '_apscale'
                 break
 
         if event == 'Load':
@@ -187,7 +189,29 @@ def main():
     ##########################################################################################################################
     ## load standard output path
     path_to_outdirs = Path(project_folder + '/')
-    settings_file = Path(str(path_to_outdirs) + '/Settings.xlsx')
+    settings_file = Path(path_to_outdirs).joinpath('Settings.xlsx')
+
+    ##########################################################################################################################
+    # create gui related folders
+    try:
+        os.mkdir(Path(path_to_outdirs).joinpath('0_statistics'))
+    except FileExistsError:
+        pass
+
+    try:
+        os.mkdir(Path(path_to_outdirs).joinpath('9_local_BLAST'))
+    except FileExistsError:
+        pass
+
+    try:
+        os.mkdir(Path(path_to_outdirs).joinpath('9_local_BLAST', 'XML2_files'))
+    except FileExistsError:
+        pass
+
+    try:
+        os.mkdir(Path(path_to_outdirs).joinpath('10_NCBI_BLAST'))
+    except FileExistsError:
+        pass
 
     ##########################################################################################################################
     ##########################################################################################################################
@@ -292,7 +316,7 @@ def main():
                 read_filter_layout = [[
                     sg.Text('maxEE:'), sg.Input(settings_list[8], key='settings_maxEE', size=(4,1)),
                     sg.Text('min length:'), sg.Input(settings_list[9], key='settings_min_length', size=(6,1)),
-                    sg.Text('max length:'), sg.Input(settings_list[10], key='settings_max_length', size=(6,1))
+                    sg.Text('max length:'), sg.Input(settings_list[10], key='settings_max_length', size=(6,1)),
                     ]]
 
                 pre_processing_layout = [[
@@ -300,12 +324,19 @@ def main():
                     ]]
 
                 clustering_layout = [[
-                    sg.Text('pct id:'), sg.Spin([i for i in range(80,101)], initial_value=settings_list[12], key='settings_pct_id', size=(6,1))
+                    sg.Text('pct id:'),
+                    sg.Spin([i for i in range(80,101)], initial_value=settings_list[12], key='settings_pct_id', size=(6,1)),
+                    sg.Text('Write output to:'),
+                    sg.Text('Excel:'), sg.Combo(['True', 'False'], key='settings_clustering_to_excel', default_value=settings_list[13]),
+                    sg.Text('Parquet (for large datasets):'), sg.Combo(['True', 'False'], key='settings_clustering_to_parquet', default_value=settings_list[14]),
                     ]]
 
                 denoising_layout = [[
-                    sg.Text('alpha:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[13], key='settings_alpha', size=(6,1)),
-                    sg.Text('min size:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[14], key='settings_min_size', size=(6,1))
+                    sg.Text('alpha:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[15], key='settings_alpha', size=(6,1)),
+                    sg.Text('min size:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[16], key='settings_min_size', size=(6,1)),
+                    sg.Text('Write output to:'),
+                    sg.Text('Excel:'), sg.Combo(['True', 'False'], key='settings_denoising_to_excel', default_value=settings_list[17]),
+                    sg.Text('Parquet (for large datasets):'), sg.Combo(['True', 'False'], key='settings_denoising_to_parquet', default_value=settings_list[18]),
                     ]]
 
                 clean_up_layout = [[
@@ -432,7 +463,7 @@ def main():
                             sg.PopupOK('Please apply new settings to proceed!', title='Error')
 
                     if event == 'apply_new_settings':
-                        settings = [values2[i] for i in list(values2.keys()) if 'settings_' in str(i)]
+                        settings = [str(values2[i]) for i in list(values2.keys()) if 'settings_' in str(i)]
                         answer = sg.PopupOKCancel('Warning: This will overwrite the settings file!', title='Warning')
                         if answer == 'OK':
                             apply_settings(settings_file, settings)
@@ -456,15 +487,25 @@ def main():
                 					[sg.Text('NCBI BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
                 					[sg.Text('_'*115)],
                                     [sg.Frame(layout=[
+                                    [sg.Text('1. BLAST you OTU or ESV fasta file against the NCBI database:'), sg.Button('NCBI blast website')],
+                                    [sg.Text('2. When results are available, click on \'Download all\' and select the \'Single-file XML2\' format.')],
+                                    [sg.Text('3. Store the xml2 file in the \'9_NCBI_BLAST/xml2_files\' folder.')]
+                                    ], title='BLAST search')],
+                                    [sg.Frame(layout=[
+                                    [sg.Text('If the fasta files contains too many entries and the NCBI BLAST keeps failing, create subsets here:')],
+                                    [sg.Text('Sequence batch size:'), sg.Input('150', size=(5,1), key='batch_size'), sg.Button('Split fasta file', key='subset_fasta')],
+                                    [sg.Text('BLAST all fasta files seperately and download the xml2 files as described above.')],
+                                    ], title='Fasta subset')],
+                                    [sg.Frame(layout=[
+                                    [sg.Text('1. Select the original fasta file.')],
                                     [sg.Text('Fasta file:', size=(20,1)), sg.Input('', size=(30,1), key='fasta_file'), sg.FileBrowse('Browse', initial_folder = path_to_outdirs)],
+                                    [sg.Text('2. Select the read table.')],
                                     [sg.Text('Read table:', size=(20,1)), sg.Input('', size=(30,1), key='read_table'), sg.FileBrowse('Browse', initial_folder = path_to_outdirs)],
+                                    [sg.Text('3. Select all xml files downloaded from NCBI.')],
                                     [sg.Text('BLAST xml file(s):', size=(20,1)), sg.Input('', size=(30,1), key='xml_files'), sg.FilesBrowse('Browse', initial_folder = path_to_outdirs)],
+                                    [sg.Text('4. Select a limit of how many hits should be considered.')],
                                     [sg.Text('BLAST hit limit:'), sg.Input('10', size=(5,1), key='limit')],
                                     ], title='Input files')],
-                                    [sg.Frame(layout=[
-                                    [sg.Text('If the fasta files contains to many entries for an NCBI BLAST, create subsets here:')],
-                                    [sg.Text('Batch size:'), sg.Input('150', size=(5,1), key='batch_size'), sg.Button('Run', key='subset_fasta')]
-                                    ], title='Fasta subset')],
                 					[sg.Text('')],
                                     [sg.Button('Create taxonomy table', size=(20,2), key=('fetch_taxonomy')), sg.CB('Minimize APSCALE', default=True, key='minimize_window')],
                                     [sg.Text('',size=(1,1))],

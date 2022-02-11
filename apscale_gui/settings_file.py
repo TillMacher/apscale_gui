@@ -29,15 +29,14 @@ def apply_settings(file, settings):
         except:
             settings_converted.append(i)
 
-
     ## collect settings from the GUI
     df0 = pd.read_excel(file, sheet_name='0_general_settings')
     df1 = pd.DataFrame([[settings_converted[0], settings_converted[1], settings_converted[2]]], columns=['maxdiffpct', 'maxdiffs', 'minovlen'])
     df2 = pd.DataFrame([[settings_converted[3], settings_converted[4], settings_converted[5]]], columns=["P5 Primer (5' - 3')", "P7 Primer (5' - 3')", 'anchoring'])
     df3 = pd.DataFrame([[settings_converted[6], settings_converted[7], settings_converted[8]]], columns=['maxEE', 'min length', 'max length'])
     df4 = pd.DataFrame([[settings_converted[9]]], columns=['min size to pool'])
-    df5 = pd.DataFrame([[settings_converted[10]]], columns=['pct id'])
-    df6 = pd.DataFrame([[settings_converted[11], settings_converted[12]]], columns=['alpha', 'minsize'])
+    df5 = pd.DataFrame([[settings_converted[10], settings_converted[11], settings_converted[12]]], columns=['pct id', 'to excel', 'to parquet'])
+    df6 = pd.DataFrame([[settings_converted[13], settings_converted[14], settings_converted[15], settings_converted[16]]], columns=['alpha', 'minsize', 'to excel', 'to parquet'])
 
 
     # Create a Pandas Excel writer using XlsxWriter as the engine.

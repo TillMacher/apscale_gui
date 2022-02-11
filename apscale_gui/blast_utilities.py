@@ -1,16 +1,21 @@
-fasta_file = "/Users/tillmacher/Desktop/MP_Projects/Projects/z_TEST/7_clustering/OTUs_a0.97/OTU_a0.97.fasta"
-read_table = "/Users/tillmacher/Desktop/MP_Projects/Projects/z_TEST/7_clustering/OTUs_a0.97/OTU_a0.97.xlsx"
-blast_xml_files = ["/Users/tillmacher/Downloads/BJ1H0WUB01R-Alignment.xml"]
-taxonomy_table = "/Users/tillmacher/Desktop/MP_Projects/Projects/z_TEST/7_clustering/OTUs_a0.97/OTU_a0.97_taxonomy.xlsx"
-limit = 5
-batch_size = 10
-
+from pathlib import Path
+from Bio import SeqIO
+import datetime
+import datetime, sys, re, subprocess, itertools
+import pandas as pd
+from ete3 import NCBITaxa
+import requests
+import xmltodict
+import time
+import PySimpleGUI as sg
+from Bio import SeqIO
+from Bio.Blast import NCBIWWW
+from Bio import SeqIO
+from pathlib import Path
+from Bio.Blast import NCBIXML
+from tqdm import tqdm
 
 def subset_fasta(fasta_file, batch_size):
-
-    from pathlib import Path
-    from Bio import SeqIO
-    import datetime
 
     print(datetime.datetime.now().strftime("%H:%M:%S") + ": Create subsets from the fasta file.")
 
@@ -39,19 +44,6 @@ def subset_fasta(fasta_file, batch_size):
                 n += 1
 
 def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
-
-    import datetime, sys, re, subprocess, itertools
-    import pandas as pd
-    from ete3 import NCBITaxa
-    import requests
-    import xmltodict
-    import time
-    import PySimpleGUI as sg
-    from Bio import SeqIO
-    from Bio.Blast import NCBIWWW
-    from Bio import SeqIO
-    from pathlib import Path
-    from Bio.Blast import NCBIXML
 
     ########################################################################################
     ## define function
@@ -207,8 +199,7 @@ def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
 
         hit_list_2 = []
 
-        for hit in similarity_filtered_list:
-            print(hit[0])
+        for hit in tqdm(similarity_filtered_list):
             try:
                 taxonomy_list = ncbi_taxid_request(hit)
             except:
@@ -228,7 +219,7 @@ def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
         print(datetime.datetime.now().strftime("%H:%M:%S") + ": Filtering hits by similarity thresholds.")
 
         hit_list_3 = []
-        for hit in hit_list_2:
+        for hit in tqdm(hit_list_2):
             identity = hit[-2]
             # remove empty hits first
             if hit[1] != '':
@@ -329,23 +320,6 @@ def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
             open_file(Path(taxonomy_table))
 
 def ESV_reference_taxonomy(reference_fasta, blast_xml_files, limit):
-    import datetime, sys, re, subprocess, itertools
-    import pandas as pd
-    from ete3 import NCBITaxa
-    import requests
-    import xmltodict
-    import time
-    import PySimpleGUI as sg
-    from Bio import SeqIO
-    from Bio.Blast import NCBIWWW
-    from Bio import SeqIO
-    from pathlib import Path
-    from Bio.Blast import NCBIXML
-
-    # reference_fasta = "/Users/tillmacher/Documents/GitHub/MetaProcessor/metaprocessor/user_data/ESV_references/tele02_reference.fasta"
-    # reference_xml = "/Users/tillmacher/Downloads/reference.xml"
-    # limit = 10
-
 
     ########################################################################################
     ## define function
