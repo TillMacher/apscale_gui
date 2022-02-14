@@ -29,7 +29,7 @@ from lastversion import lastversion
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.0.8'
+apscale_version = '1.0.9'
 
 ## check for the latest version of TTT
 try:
