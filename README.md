@@ -74,11 +74,33 @@ and it should return the version number, for example:
 
 `3.5`
 
+### Further dependencies - blastn
+
+Apscale also calls blastn for the local blast modules. It should be installed and be in PATH to be executed
+from anywhere on the system.
+
+Check the BLAST Software home page:
+
+https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download
+
+you can download it from here:
+
+https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+
+To check this, type:
+
+`blastn -version`
+
+and it should return the version number, for example:
+
+`blastn: 2.12.0+ Package:
+  blast 2.12.0, build Jun  4 2021 04:06:33`
+
 ## Tutorial
 ### Creating a new project
 Create a new folder (e.g. on your desktop) and name it for example: 'APSCALE_projects'.
 
-Now run the APSCALE GUI with: 
+Now run the APSCALE GUI with:
 
 `python -m apscale_gui`
 

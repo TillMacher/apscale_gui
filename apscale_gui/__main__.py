@@ -14,6 +14,10 @@ from apscale_gui.fastq_eestats import main as fastq_eestats
 from apscale.a_create_project import create_project
 from apscale_gui.blast_utilities import subset_fasta
 from apscale_gui.blast_utilities import blast_xml_to_taxonomy
+from apscale_gui.blast_utilities import create_database_diat_barcode
+from apscale_gui.blast_utilities import blastn
+from apscale_gui.blast_utilities import filter_blastn_results_diatbarcode
+from apscale_gui.blast_utilities import filter_blastn_results_NCBI
 from apscale_gui.summary_stats import main as summary_stats
 from apscale_gui.settings_file import load_settings
 from apscale_gui.settings_file import apply_settings
@@ -25,14 +29,14 @@ from lastversion import lastversion
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.0.7'
+apscale_version = '1.0.8'
 
 ## check for the latest version of TTT
 try:
     latest_version = lastversion.has_update(repo="https://pypi.org/project/apscale-gui/", at='pip', current_version=apscale_version)
     if latest_version:
         sg.Popup('Newer apscale GUI version is available: ' + str(latest_version) + "\nPlease update apscale GUI via pip!", title="Update available!")
-except:
+except Exception:
     pass
 
 ##########################################################################################################################
@@ -50,13 +54,51 @@ def open_file(file):
         opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
         subprocess.call([opener, file])
 
+def check_installations():
+
+    out = subprocess.Popen('vsearch --version', shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    subprocess_return = out.stdout.read().decode("utf-8")
+    if subprocess_return != '':
+        # print(subprocess_return)
+        pass
+    else:
+        text = 'Could not find VSEARCH!\nPlease make sure you have VSEARCH installed in PATH!'
+        sg.PopupError(text, title='Warning')
+
+
+    out = subprocess.Popen('blastn -version', shell=True, stdout=subprocess.PIPE)
+    subprocess_return = out.stdout.read().decode("utf-8")
+    if subprocess_return != '':
+        # print(subprocess_return)
+        pass
+    else:
+        text = 'Could not find blastn!\nPlease make sure you have blastn installed in PATH!'
+        print(text)
+        sg.PopupError(text, title='Warning')
+
+    out = subprocess.Popen('cutadapt --version', shell=True, stdout=subprocess.PIPE)
+    subprocess_return = out.stdout.read().decode("utf-8")
+    if subprocess_return != '':
+        # print('Cutadapt version {}'.format(subprocess_return))
+        pass
+    else:
+        text = 'Could not find cutadapt!\nPlease make sure you have cutadapt installed in PATH!'
+        print(text)
+        sg.PopupError(text, title='Warning')
+
 ##########################################################################################################################
 #########################################################################################################################
 ##########################################################################################################################
 
+
 def main():
 
     sg.ChangeLookAndFeel('Reddit')
+
+    ##########################################################################################################################
+    # check installations
+
+    check_installations()
 
     ##########################################################################################################################
     # start Popup window
@@ -182,7 +224,7 @@ def main():
     try:
         if not os.path.exists(Path(str(projects_main_path))):
             os.mkdir(Path(str(projects_main_path) + '/Projects'))
-    except:
+    except Exception:
         sg.PopupError('The output directory does not exist anymore! Please refresh the output folder.')
         sys.exit()
 
@@ -204,12 +246,12 @@ def main():
         pass
 
     try:
-        os.mkdir(Path(path_to_outdirs).joinpath('9_local_BLAST', 'XML2_files'))
+        os.mkdir(Path(path_to_outdirs).joinpath('10_NCBI_BLAST'))
     except FileExistsError:
         pass
 
     try:
-        os.mkdir(Path(path_to_outdirs).joinpath('10_NCBI_BLAST'))
+        os.mkdir(Path(path_to_outdirs).joinpath('10_NCBI_BLAST', 'XML2_files'))
     except FileExistsError:
         pass
 
@@ -271,7 +313,7 @@ def main():
                     import demultiplexer.__main__ as demultiplexer
                     MP_window.hide()
                     demultiplexer.main()
-                except:
+                except Exception:
                     sg.PopupError('You have to install the demultipexer first!')
 
             if event == 'open_boldigger':
@@ -279,7 +321,7 @@ def main():
                     import boldigger.__main__ as boldigger
                     MP_window.hide()
                     boldigger.main()
-                except:
+                except Exception:
                     sg.PopupError('You have to install BOLDigger first!')
 
             if event == 'open_log_file':
@@ -487,7 +529,7 @@ def main():
                 					[sg.Text('NCBI BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
                 					[sg.Text('_'*115)],
                                     [sg.Frame(layout=[
-                                    [sg.Text('1. BLAST you OTU or ESV fasta file against the NCBI database:'), sg.Button('NCBI blast website')],
+                                    [sg.Text('1. BLAST your OTU or ESV fasta file against the NCBI database:'), sg.Button('NCBI blast website')],
                                     [sg.Text('2. When results are available, click on \'Download all\' and select the \'Single-file XML2\' format.')],
                                     [sg.Text('3. Store the xml2 file in the \'9_NCBI_BLAST/xml2_files\' folder.')]
                                     ], title='BLAST search')],
@@ -629,7 +671,107 @@ def main():
                 quality_control_window.Close()
 
             if event == 'open_local_blast':
-                sg.Popup('Coming soon!', title='')
+                MP_window.hide()
+
+                layout_local_blast = [
+                					[sg.Text('Local BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
+                					[sg.Text('_'*90)],
+
+                                    [sg.Frame(layout=[
+                                    [sg.Text('1. Select your fasta file:', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='local_blast_fasta_file', initial_folder = path_to_outdirs)],
+                                    [sg.Text('2. Select your read table:', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='local_blast_read_table', initial_folder = path_to_outdirs)],
+                                    [sg.Text('', size=(90,1))],
+                                    ], title='Files')],
+
+                                    [sg.Text(''), sg.Frame(layout=[
+                                    [sg.Text('1. Download the latest diat.barcode version from here:', size=(50,1)), sg.Button('Download', key='open_download_diatbarcode')],
+                                    [sg.Text('2. Build a database from'), sg.Input('', size=(10,1)), sg.FileBrowse(key='diatbarcode_xlsx', initial_folder = path_to_outdirs), sg.Text('(.xlsx)'), sg.Button('Go!', key='build_diat_barcode_database')],
+                                    [sg.Text('', size=(87,1))],
+                                    ], title='Diat. barcode database')],
+
+                                    [sg.Text(''), sg.Frame(layout=[
+                                    [sg.Text('1.1 Create your own custom NCBI database', size=(50,1)), sg.Button('Learn more', key='open_custom_db_tutorial')],
+                                    [sg.Text('1.2 Download the latest MitoFish database:', size=(50,1)), sg.Button('Download', key='open_download_mitofish')],
+                                    [sg.Text('2. Build a database from'), sg.Input('', size=(10,1)), sg.FileBrowse(key='ncbi_fasta', initial_folder = path_to_outdirs), sg.Text('(.fasta)'), sg.Button('Go!')],
+                                    [sg.Text('', size=(87,1))],
+                                    ], title='NCBI database')],
+
+                                    [sg.Frame(layout=[
+                                    [sg.Text('1. Select a database', size=(25,1)), sg.Input('', size=(10,1)), sg.FolderBrowse(key='blast_database', initial_folder = Path(path_to_outdirs).joinpath('9_local_BLAST'))],
+                                    [sg.Text('2. Run BLASTn', size=(25,1)), sg.Button('Go!', key='run_blast'), sg.Combo(['Highly similar sequences (megablast)', 'More dissimilar sequences (discontiguous megablast)', 'Somewhat similar sequences (blastn)'], default_value='Somewhat similar sequences (blastn)', key='blast_task')],
+                                    [sg.Text('3. Select BLAST results (.csv)', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='blast_csv', initial_folder = Path(path_to_outdirs).joinpath('9_local_BLAST'))],
+                                    [sg.Text('4. Filter BLAST results', size=(25,1)), sg.Button('Go!', key='run_blast_filter'), sg.Text('Select taxonomy source:'), sg.Combo(['Diat.barcode', 'Mitofish/NCBI'], default_value='Mitofish/NCBI', key='taxonomy_collection')],
+                                    [sg.Text('Species >='), sg.Spin([i for i in range(1,101)], initial_value=98),
+                                    sg.Text('Genus >='), sg.Spin([i for i in range(1,101)], initial_value=95),
+                                    sg.Text('Family >='), sg.Spin([i for i in range(1,101)], initial_value=90),
+                                    sg.Text('Order >='), sg.Spin([i for i in range(1,101)], initial_value=85)],
+                                    [sg.Text('', size=(90,1))],
+                                    ], title='BLASTn')],
+
+                                    [sg.Text('',size=(1,1))],
+                                    [sg.Button('Exit', button_color=('black', 'red'))]
+                					]
+
+                # create the demultiplexing window
+                blast_window = sg.Window('Local Blast', layout_local_blast, keep_on_top=False)
+                while (True):
+                    ######################################
+                    event, values2 = blast_window.Read()
+                    ######################################
+
+                    if event in ('Exit', None):
+                        blast_window.close()
+                        break
+
+                    if event == 'build_diat_barcode_database':
+                        if values2['diatbarcode_xlsx'] == '':
+                            sg.Popup('Please provide the diat.barcode.xlsx file!', title='Error')
+                        else:
+                            create_database_diat_barcode(values2['diatbarcode_xlsx'], project_folder)
+
+                    if event == 'run_blast':
+                        if values2['local_blast_fasta_file'] == '' or values2['local_blast_read_table'] == '' or values2['blast_database'] == '':
+                            sg.Popup('Please provide all files!', title='Error')
+                        else:
+                            blast_window.Hide()
+                            sg.Popup('Starting BLAST!\nThis may take a while!', title='Finished')
+                            blastn(values2['local_blast_fasta_file'], values2['blast_database'], project_folder, 4, values2['blast_task'])
+                            sg.Popup('Finished BLAST!', title='Finished')
+                            blast_window.UnHide()
+
+                    if event == 'run_blast_filter':
+                        if values2['blast_csv'] == '' or values2['local_blast_read_table'] == '':
+                            sg.Popup('Please provide all files!', title='Error')
+                        else:
+                            blast_window.Hide()
+                            sg.Popup('Starting to filter BLAST results!\nThis may take a while!', title='Finished')
+
+                            ## NCBI taxonomy
+                            if values2['taxonomy_collection'] == 'Mitofish/NCBI':
+                                sg.Popup('Try to run the filter module during off-peak hours!\n\nThis module assesses the NCBI database to collect the taxonomy of the respective reference sequence.\n\nThis can lead to server timeouts when sending too many requests.', title='Warning')
+                                filter_blastn_results_NCBI(values2['blast_csv'], values2['local_blast_read_table'], project_folder)
+
+                            ## Diat.barcode taxonomy
+                            elif  values2['taxonomy_collection'] == 'Diat.barcode':
+                                if values2['diatbarcode_xlsx'] == '':
+                                    sg.Popup('Please provide the Diat.barcode.xlsx file!')
+                                else:
+                                    filter_blastn_results_diatbarcode(values2['blast_csv'], values2['local_blast_read_table'], values2['diatbarcode_xlsx'], project_folder)
+
+                            sg.Popup('Finished filtering BLAST results!', title='Finished')
+                            blast_window.UnHide()
+
+                    if event == 'open_download_diatbarcode':
+                        webbrowser.open('https://data.inrae.fr/dataset.xhtml?persistentId=doi:10.15454/TOMBYZ')
+
+                    if event == 'open_download_mitofish':
+                        webbrowser.open('http://mitofish.aori.u-tokyo.ac.jp/download.html')
+
+                    if event == 'open_custom_db_tutorial':
+                        webbrowser.open('https://github.com/TillMacher/_data/custom_db.pdf')
+
+                blast_window.close()
+                MP_window.UnHide()
 
             if event == 'open_analysis_statistics':
                 MP_window.hide()
@@ -656,22 +798,22 @@ def main():
         ###########################################################
             try:
                 MP_window.UnHide()
-            except:
+            except Exception:
                 pass
         ###########################################################
 
         # define exceptions
         # if there are unexpected errors print a message and continue the script!
-        except:
+        except Exception:
             ## unhide the main window if neccessary
             try:
                 MP_window.UnHide()
-            except:
+            except Exception:
                 pass
             ## close the secondary window if neccessary
             try:
                 tools_window.Close()
-            except:
+            except Exception:
                 pass
 
             ## create layout for the error message

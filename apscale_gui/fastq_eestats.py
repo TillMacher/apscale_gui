@@ -6,6 +6,7 @@ from joblib import Parallel, delayed
 import plotly.graph_objects as go
 import statistics
 import numpy as np
+import PySimpleGUI as sg
 
 ## calculate weighted average
 def weighted_avg_per_file(df):
@@ -140,33 +141,36 @@ def main(folder, project = Path.cwd()):
 
     print('{}: Starting to collect statistics for {} input files.'.format(datetime.datetime.now().strftime("%H:%M:%S"), len(input)))
 
-    ## create output folders
-    try:
-        os.mkdir(Path(project).joinpath('0_statistics'))
-    except FileExistsError:
-        pass
-    try:
-        os.mkdir(Path(project).joinpath('0_statistics', folder))
-    except FileExistsError:
-        pass
-    try:
-        os.mkdir(Path(project).joinpath('0_statistics', folder, 'log'))
-    except FileExistsError:
-        pass
-    try:
-        os.mkdir(Path(project).joinpath('0_statistics', folder, 'plot_files'))
-    except FileExistsError:
-        pass
-    try:
-        os.mkdir(Path(project).joinpath('0_statistics', folder, 'plot_dataset'))
-    except FileExistsError:
-        pass
+    if len(input) == 0:
+        sg.Popup('Could not find any files!\nPlease first run the module first to calculate statistics!')
+    else:
+        ## create output folders
+        try:
+            os.mkdir(Path(project).joinpath('0_statistics'))
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(Path(project).joinpath('0_statistics', folder))
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(Path(project).joinpath('0_statistics', folder, 'log'))
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(Path(project).joinpath('0_statistics', folder, 'plot_files'))
+        except FileExistsError:
+            pass
+        try:
+            os.mkdir(Path(project).joinpath('0_statistics', folder, 'plot_dataset'))
+        except FileExistsError:
+            pass
 
-    ## parallelize the fastq_eestats for each file
-    Parallel(n_jobs = cores)(delayed(fastq_eestats)(file, folder, project = project) for file in input)
+        ## parallelize the fastq_eestats for each file
+        Parallel(n_jobs = cores)(delayed(fastq_eestats)(file, folder, project = project) for file in input)
 
-    ## calculate whole data set statistics
-    dataset_stats(folder, input, project = project)
+        ## calculate whole data set statistics
+        dataset_stats(folder, input, project = project)
 
 if __name__ == "__main__":
     main()

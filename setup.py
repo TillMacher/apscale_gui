@@ -20,8 +20,14 @@ setuptools.setup(
                         'lastversion >= 1.3.3',
                         'boldigger >= 1.2.5',
                         'plotly >= 4.9.0',
+                        'requests >= 2.25.1',
+                        'requests_html >= 0.10.0',
                         'kaleido >= 0.2.1',
-                        'xlsxwriter >= 3.0.2'
+                        'xlsxwriter >= 3.0.2',
+                        'tqdm >= 4.60.0',
+                        'ete3 >= 3.1.2',
+                        'biopython >= 1.78',
+                        'xmltodict >= 0.12.0'
                         ],
     include_package_data = True,
     classifiers=[
