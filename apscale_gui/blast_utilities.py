@@ -325,8 +325,8 @@ def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
 
 ## diat.barcode
 
-def create_database_diat_barcode(diatbarcode_xlsx, project_folder):
-    ' Convert the diat.barcode file to fasta and create an new database using makeblastdb'
+def create_database_diat_barcode(diatbarcode_xlsx, project_folder, databases_path):
+    ' Convert the diat.barcode file to fasta and create an new database using makeblastdb '
 
     ## collect files
     diatbarcode_xlsx = Path(diatbarcode_xlsx)
@@ -340,7 +340,7 @@ def create_database_diat_barcode(diatbarcode_xlsx, project_folder):
     diat_barcode_df = pd.read_excel(diatbarcode_xlsx)
 
     ## create a new folder for the database
-    db_folder = Path(project_folder).joinpath('9_local_BLAST', 'DB_' + filename)
+    db_folder = Path(databases_path).joinpath('DB_' + filename)
     try:
         os.mkdir(db_folder)
     except FileExistsError:
@@ -537,7 +537,7 @@ def filter_blastn_results_diatbarcode(blast_csv, read_table, diat_barcode_xlsx, 
 
 ## NCBI
 
-def create_database_NCBI(NCBI_fasta, project_folder):
+def create_database_NCBI(NCBI_fasta, project_folder, databases_path):
     ' Create a database from the NCBI fasta using makeblastdb'
 
     ## collect files
@@ -545,7 +545,7 @@ def create_database_NCBI(NCBI_fasta, project_folder):
     filename = Path(NCBI_fasta).stem
 
     ## create a new folder for the database
-    db_folder = Path(project_folder).joinpath('9_local_BLAST', 'DB_' + filename)
+    db_folder = Path(databases_path).joinpath('DB_' + filename)
     try:
         os.mkdir(db_folder)
     except FileExistsError:
@@ -674,15 +674,17 @@ def filter_blastn_results_NCBI(blast_csv, read_table, project_folder):
     for OTU, hit in tqdm(sorted_hits_dict.items()):
         sublist = []
         for i in hit:
+            if 'gb|' in i[0]:
+                accession = i[0].split('|')[1]
+            else:
+                accession = i
             try:
                 time.sleep(1)
-                accession = i[0].split('|')[1]
                 taxid = accession2taxid(accession)
                 taxonomy = ncbi_taxid_request(taxid)
                 sublist.append([taxonomy, i[1]])
             except IndexError:
                 time.sleep(60)
-                accession = i[0].split('|')[1]
                 taxid = accession2taxid(accession)
                 taxonomy = ncbi_taxid_request(taxid)
                 sublist.append([taxonomy, i[1]])

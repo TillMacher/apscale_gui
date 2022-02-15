@@ -18,6 +18,7 @@ from apscale_gui.blast_utilities import create_database_diat_barcode
 from apscale_gui.blast_utilities import blastn
 from apscale_gui.blast_utilities import filter_blastn_results_diatbarcode
 from apscale_gui.blast_utilities import filter_blastn_results_NCBI
+from apscale_gui.blast_utilities import create_database_NCBI
 from apscale_gui.summary_stats import main as summary_stats
 from apscale_gui.settings_file import load_settings
 from apscale_gui.settings_file import apply_settings
@@ -29,7 +30,7 @@ from lastversion import lastversion
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.0.9'
+apscale_version = '1.0.10'
 
 ## check for the latest version of TTT
 try:
@@ -149,7 +150,7 @@ def main():
     # create display text
     current_path = 'Current path: ' + str(projects_main_path)
     # load all available projects
-    projects = glob.glob(str(projects_main_path) + '/*')
+    projects = glob.glob(str(projects_main_path) + '/*_apscale')
     projects_list = []
 
     for project in projects:
@@ -252,6 +253,12 @@ def main():
 
     try:
         os.mkdir(Path(path_to_outdirs).joinpath('10_NCBI_BLAST', 'XML2_files'))
+    except FileExistsError:
+        pass
+
+    databases_path = Path(projects_main_path).joinpath('APSCALE_databases')
+    try:
+        os.mkdir(databases_path)
     except FileExistsError:
         pass
 
@@ -692,12 +699,12 @@ def main():
                                     [sg.Text(''), sg.Frame(layout=[
                                     [sg.Text('1.1 Create your own custom NCBI database', size=(50,1)), sg.Button('Learn more', key='open_custom_db_tutorial')],
                                     [sg.Text('1.2 Download the latest MitoFish database:', size=(50,1)), sg.Button('Download', key='open_download_mitofish')],
-                                    [sg.Text('2. Build a database from'), sg.Input('', size=(10,1)), sg.FileBrowse(key='ncbi_fasta', initial_folder = path_to_outdirs), sg.Text('(.fasta)'), sg.Button('Go!')],
+                                    [sg.Text('2. Build a database from'), sg.Input('', size=(10,1)), sg.FileBrowse(key='ncbi_fasta', initial_folder = path_to_outdirs), sg.Text('(.fasta)'), sg.Button('Go!', key='build_NCBI_database')],
                                     [sg.Text('', size=(87,1))],
                                     ], title='NCBI database')],
 
                                     [sg.Frame(layout=[
-                                    [sg.Text('1. Select a database', size=(25,1)), sg.Input('', size=(10,1)), sg.FolderBrowse(key='blast_database', initial_folder = Path(path_to_outdirs).joinpath('9_local_BLAST'))],
+                                    [sg.Text('1. Select a database', size=(25,1)), sg.Input('', size=(10,1)), sg.FolderBrowse(key='blast_database', initial_folder = databases_path)],
                                     [sg.Text('2. Run BLASTn', size=(25,1)), sg.Button('Go!', key='run_blast'), sg.Combo(['Highly similar sequences (megablast)', 'More dissimilar sequences (discontiguous megablast)', 'Somewhat similar sequences (blastn)'], default_value='Somewhat similar sequences (blastn)', key='blast_task')],
                                     [sg.Text('3. Select BLAST results (.csv)', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='blast_csv', initial_folder = Path(path_to_outdirs).joinpath('9_local_BLAST'))],
                                     [sg.Text('4. Filter BLAST results', size=(25,1)), sg.Button('Go!', key='run_blast_filter'), sg.Text('Select taxonomy source:'), sg.Combo(['Diat.barcode', 'Mitofish/NCBI'], default_value='Mitofish/NCBI', key='taxonomy_collection')],
@@ -727,7 +734,13 @@ def main():
                         if values2['diatbarcode_xlsx'] == '':
                             sg.Popup('Please provide the diat.barcode.xlsx file!', title='Error')
                         else:
-                            create_database_diat_barcode(values2['diatbarcode_xlsx'], project_folder)
+                            create_database_diat_barcode(values2['diatbarcode_xlsx'], project_folder, databases_path)
+
+                    if event == 'build_NCBI_database':
+                        if values2['ncbi_fasta'] == '':
+                            sg.Popup('Please provide a .fasta file!', title='Error')
+                        else:
+                            create_database_NCBI(values2['ncbi_fasta'], project_folder, databases_path)
 
                     if event == 'run_blast':
                         if values2['local_blast_fasta_file'] == '' or values2['local_blast_read_table'] == '' or values2['blast_database'] == '':
