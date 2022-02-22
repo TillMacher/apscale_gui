@@ -16,6 +16,7 @@ from requests_html import HTMLSession
 ####################################
 ## NCBI blast functions
 
+
 def subset_fasta(fasta_file, batch_size):
 
     print(datetime.datetime.now().strftime('%H:%M:%S') + ': Create subsets from the fasta file.')
@@ -23,6 +24,14 @@ def subset_fasta(fasta_file, batch_size):
     batch_size = int(batch_size)
 
     fasta_file = Path(fasta_file)
+
+    ## create a new folder for the database
+    subset_folder = Path(fasta_file.parent).joinpath('fasta_subsets')
+    try:
+        os.mkdir(subset_folder)
+    except FileExistsError:
+        pass
+
     ## create batches from the main fasta file
     with open(fasta_file) as handle:
         i = 1
@@ -30,7 +39,7 @@ def subset_fasta(fasta_file, batch_size):
         chunk_fasta_files = []
         for record in SeqIO.parse(handle, 'fasta'):
             ## create a new fasta file for each chunk
-            chunk_fasta = Path(str(fasta_file.parent) + '/' + str(i) + '.fasta')
+            chunk_fasta = '{}/subset_{}.fasta'.format(subset_folder, i)
             ## save the name of all batches
             if chunk_fasta not in chunk_fasta_files:
                 chunk_fasta_files.append(chunk_fasta)
@@ -44,10 +53,9 @@ def subset_fasta(fasta_file, batch_size):
             else:
                 n += 1
 
-def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
+    sg.Popup('{} subsets were created from the original .fasta file.'.format(i))
 
-    ########################################################################################
-    ## define function
+def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
 
     def sort_df(df):
         sort_col = [int(n.split('_')[1]) for n in df['ID']]
@@ -130,17 +138,16 @@ def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
                 # collect the query name
                 if '<query-title>' in line:
                     query = re.split('>|<', line)[2]
-                # collect the query sequence length
-                if '<query-len>' in line:
-                    query_len = re.split('>|<', line)[2]
                 # collect the taxonomy id
                 if '<taxid>' in line:
                     taxid = re.split('>|<', line)[2]
                 # calculate the similarity
                 if '<identity>' in line:
                     identity = re.split('>|<', line)[2]
-                    diff = int(query_len) - int(identity)
-                    perc_id = round(100 - diff / int(query_len) * 100, 2)
+                # collect the query sequence length
+                if '<align-len>' in line:
+                    align_len = re.split('>|<', line)[2]
+                    perc_id = round(int(identity) / int(align_len) * 100, 2)
                     hit_list.append([query, taxid, perc_id, 'NCBI'])
             f.close()
 
@@ -319,6 +326,8 @@ def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
         answer = sg.PopupYesNo('Open taxonomy table?')
         if answer == 'Yes':
             open_file(Path(taxonomy_table))
+
+        sg.Popup('Taxonomy table is found under {}.'.format(taxonomy_table))
 
 ####################################
 ## local blast functions
