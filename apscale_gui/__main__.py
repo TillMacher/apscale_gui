@@ -9,6 +9,7 @@ from apscale.d_quality_filtering import main as quality_filtering
 from apscale.e_dereplication_pooling import main as dereplication_pooling
 from apscale.f_otu_clustering import main as otu_clustering
 from apscale.g_denoising import main as g_denoising
+from apscale.h_lulu_filtering import main as h_lulu_filtering
 from apscale_gui.clean_up_data import clean_up_data
 from apscale_gui.fastq_eestats import main as fastq_eestats
 from apscale.a_create_project import create_project
@@ -30,7 +31,7 @@ from lastversion import lastversion
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.0.11'
+apscale_version = '1.1.0'
 
 ## check for the latest version of TTT
 try:
@@ -242,17 +243,17 @@ def main():
         pass
 
     try:
-        os.mkdir(Path(path_to_outdirs).joinpath('9_local_BLAST'))
+        os.mkdir(Path(path_to_outdirs).joinpath('10_local_BLAST'))
     except FileExistsError:
         pass
 
     try:
-        os.mkdir(Path(path_to_outdirs).joinpath('10_NCBI_BLAST'))
+        os.mkdir(Path(path_to_outdirs).joinpath('11_NCBI_BLAST'))
     except FileExistsError:
         pass
 
     try:
-        os.mkdir(Path(path_to_outdirs).joinpath('10_NCBI_BLAST', 'XML2_files'))
+        os.mkdir(Path(path_to_outdirs).joinpath('11_NCBI_BLAST', 'XML2_files'))
     except FileExistsError:
         pass
 
@@ -342,7 +343,7 @@ def main():
 
                 MP_window.hide()
 
-                settings_list = load_settings(settings_file)
+                settings_dict = load_settings(settings_file)
 
                 modify_settings_sheet = [[
                     sg.Text('Load settings file and modify as required.'),
@@ -350,53 +351,61 @@ def main():
                     sg.Button('Apply new settings', key='apply_new_settings', button_color=('black', 'lightgreen')),
                     ]]
 
+                general_settings_layout = [[
+                    sg.Text('Write to Excel:'), sg.Combo(['True', 'False'], key='settings_clustering_to_excel', default_value=settings_dict['to excel']),
+                    sg.Text('Write to Parquet:'), sg.Combo(['True'], default_value='True'),
+                    ]]
+
                 pe_merging_layout = [[
-                    sg.Text('maxdiffpct:'), sg.Spin([i for i in range(1,101)], initial_value=settings_list[2], key='settings_maxdiffpct', size=(6,1)),
-                    sg.Text('maxdiffs:'), sg.Spin([i for i in range(1,200)], initial_value=settings_list[3], key='settings_maxdiffs', size=(6,1)),
-                    sg.Text('minovlen:'), sg.Spin([i for i in range(1,26)], initial_value=settings_list[4], key='settings_minovlen', size=(6,1))
+                    sg.Text('maxdiffpct:'), sg.Spin([i for i in range(1,101)], initial_value=settings_dict['maxdiffpct'], key='settings_maxdiffpct', size=(6,1)),
+                    sg.Text('maxdiffs:'), sg.Spin([i for i in range(1,200)], initial_value=settings_dict['maxdiffs'], key='settings_maxdiffs', size=(6,1)),
+                    sg.Text('minovlen:'), sg.Spin([i for i in range(1,26)], initial_value=settings_dict['minovlen'], key='settings_minovlen', size=(6,1))
                     ]]
 
                 primer_trimming_layout = [[
-                    sg.Text("P5 Primer (5' - 3'):"), sg.Input(settings_list[5], key='settings_p5_primer', size=(20,1)),
-                    sg.Text("P7 Primer (5' - 3'):"), sg.Input(settings_list[6], key='settings_p7_primer', size=(20,1)),
-                    sg.Text('Anchoring:'), sg.Combo(['True', 'False'], key='settings_anchoring', default_value=settings_list[7])
+                    sg.Text("P5 Primer (5' - 3'):"), sg.Input(settings_dict["P5 Primer (5' - 3')"], key='settings_p5_primer', size=(20,1)),
+                    sg.Text("P7 Primer (5' - 3'):"), sg.Input(settings_dict["P7 Primer (5' - 3')"], key='settings_p7_primer', size=(20,1)),
+                    sg.Text('Anchoring:'), sg.Combo(['True', 'False'], key='settings_anchoring', default_value=settings_dict['anchoring'])
                     ]]
 
                 read_filter_layout = [[
-                    sg.Text('maxEE:'), sg.Input(settings_list[8], key='settings_maxEE', size=(4,1)),
-                    sg.Text('min length:'), sg.Input(settings_list[9], key='settings_min_length', size=(6,1)),
-                    sg.Text('max length:'), sg.Input(settings_list[10], key='settings_max_length', size=(6,1)),
+                    sg.Text('maxEE:'), sg.Input(settings_dict['maxEE'], key='settings_maxEE', size=(4,1)),
+                    sg.Text('min length:'), sg.Input(settings_dict['min length'], key='settings_min_length', size=(6,1)),
+                    sg.Text('max length:'), sg.Input(settings_dict['max length'], key='settings_max_length', size=(6,1)),
                     ]]
 
                 pre_processing_layout = [[
-                    sg.Text('min size:'), sg.Spin([i for i in range(2,6)], initial_value=settings_list[11], key='settings_derep_minsize', size=(6,1)),
+                    sg.Text('min size to pool:'), sg.Spin([i for i in range(2,6)], initial_value=settings_dict['min size to pool'], key='settings_derep_minsize', size=(6,1)),
                     ]]
 
                 clustering_layout = [[
                     sg.Text('pct id:'),
-                    sg.Spin([i for i in range(80,101)], initial_value=settings_list[12], key='settings_pct_id', size=(6,1)),
-                    sg.Text('Write output to:'),
-                    sg.Text('Excel:'), sg.Combo(['True', 'False'], key='settings_clustering_to_excel', default_value=settings_list[13]),
-                    sg.Text('Parquet (for large datasets):'), sg.Combo(['True', 'False'], key='settings_clustering_to_parquet', default_value=settings_list[14]),
+                    sg.Spin([i for i in range(80,101)], initial_value=settings_dict['pct id'], key='settings_pct_id', size=(6,1)),
                     ]]
 
                 denoising_layout = [[
-                    sg.Text('alpha:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[15], key='settings_alpha', size=(6,1)),
-                    sg.Text('min size:'), sg.Spin([i for i in range(1,11)], initial_value=settings_list[16], key='settings_min_size', size=(6,1)),
-                    sg.Text('Write output to:'),
-                    sg.Text('Excel:'), sg.Combo(['True', 'False'], key='settings_denoising_to_excel', default_value=settings_list[17]),
-                    sg.Text('Parquet (for large datasets):'), sg.Combo(['True', 'False'], key='settings_denoising_to_parquet', default_value=settings_list[18]),
+                    sg.Text('alpha:'), sg.Spin([i for i in range(1,11)], initial_value=settings_dict['alpha'], key='settings_alpha', size=(6,1)),
+                    sg.Text('min size:'), sg.Spin([i for i in range(1,11)], initial_value=settings_dict['minsize'], key='settings_min_size', size=(6,1)),
+                    ]]
+
+                lulu_layout = [[
+                    sg.Text('min similarity:'), sg.Spin([i for i in range(1,101)], initial_value=settings_dict['minimum similarity'], key='settings_min_sim', size=(6,1)),
+                    sg.Text('min rel. co-occurrence:'), sg.Spin([i for i in range(1,101)], initial_value=settings_dict['minimum relative cooccurence'], key='settings_min_rel_coo', size=(6,1)),
+                    sg.Text('min ratio:'), sg.Input(settings_dict['minimum ratio'], key='settings_min_ratio', size=(6,1)),
                     ]]
 
                 clean_up_layout = [[
-                    sg.Text('Remove all temporary data to safe storage space.'),
+                    sg.Text('Remove all intermediate data (2.-4.) to safe storage space. OTUs and ESVs can still be generated.'),
                 ]]
 
                 layout_run_analyses = [
                 					[sg.Text('All-in-One analysis', size=(50,1), font=('Arial', 12, 'bold'))],
                 					[sg.Text('_'*115)],
 
-                                    [sg.Text('', size=(4,1)), sg.Text('1. Modify settings:', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=modify_settings_sheet, title='')],
+                                    [sg.Text('', size=(4,1)), sg.Text('  Modify settings:', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=modify_settings_sheet, title='')],
+                					[sg.Text('')],
+
+                                    [sg.Text('', size=(4,1)), sg.Text('1. General settings:', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=general_settings_layout, title='')],
                 					[sg.Text('')],
 
                                     [sg.CB('', default=True, key='cb_pe_merging'), sg.Text('2. Paired-end merging', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=pe_merging_layout, title='')],
@@ -415,6 +424,9 @@ def main():
                 					[sg.Text('')],
 
                                     [sg.CB('', default=True, key='cb_denoising'), sg.Text('6.2 Denoising', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=denoising_layout, title='')],
+                					[sg.Text('')],
+
+                                    [sg.CB('', default=True, key='cb_lulu'), sg.Text('6.3 LULU filtering', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=lulu_layout, title='')],
                 					[sg.Text('')],
 
                                     [sg.CB('', default=False, key='cb_clean_up'), sg.Text('Data clean-up', size=(22,1), font=('Arial', 11, 'bold')), sg.Frame(layout=clean_up_layout, title='')],
@@ -439,11 +451,10 @@ def main():
 
                     if event == 'Run analysis':
                         ## check if settings from GUI and settings file match
-                        settings_list = load_settings(settings_file)
-                        settings_new = [str(values2[i]) for i in list(values2.keys()) if 'settings_' in str(i)]
+                        answer = sg.PopupOKCancel('Please remember to apply your settings prior to running APSCALE!', title='Warning')
 
                         ## only proceed if settings have been applied from gui to sheet
-                        if settings_list[2:] == settings_new:
+                        if answer == 'OK':
                             ######################################
                             if values2['minimize_window'] == True:
                                 tools_window.hide()
@@ -487,6 +498,11 @@ def main():
                                     g_denoising(str(path_to_outdirs))
                                     print('')
 
+                                if values2['cb_lulu'] == True:
+                                    print('Starting LULU filtering')
+                                    h_lulu_filtering(str(path_to_outdirs))
+                                    print('')
+
                                 if values2['cb_clean_up'] == True:
                                     answer = sg.PopupOKCancel('Warning: You selected the data clean-up:\nThis will erase excess data permanently. Raw reads and pooled reads will be kept!', title='Warning')
                                     if answer == 'OK':
@@ -508,11 +524,8 @@ def main():
                             elif values2['minimize_window'] == True:
                                 tools_window.UnHide()
 
-                        else:
-                            sg.PopupOK('Please apply new settings to proceed!', title='Error')
-
                     if event == 'apply_new_settings':
-                        settings = [str(values2[i]) for i in list(values2.keys()) if 'settings_' in str(i)]
+                        settings = {i:str(values2[i]) for i in list(values2.keys()) if 'settings_' in str(i)}
                         answer = sg.PopupOKCancel('Warning: This will overwrite the settings file!', title='Warning')
                         if answer == 'OK':
                             apply_settings(settings_file, settings)
@@ -706,7 +719,7 @@ def main():
                                     [sg.Frame(layout=[
                                     [sg.Text('1. Select a database', size=(25,1)), sg.Input('', size=(10,1)), sg.FolderBrowse(key='blast_database', initial_folder = databases_path)],
                                     [sg.Text('2. Run BLASTn', size=(25,1)), sg.Button('Go!', key='run_blast'), sg.Combo(['Highly similar sequences (megablast)', 'More dissimilar sequences (discontiguous megablast)', 'Somewhat similar sequences (blastn)'], default_value='Somewhat similar sequences (blastn)', key='blast_task')],
-                                    [sg.Text('3. Select BLAST results (.csv)', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='blast_csv', initial_folder = Path(path_to_outdirs).joinpath('9_local_BLAST'))],
+                                    [sg.Text('3. Select BLAST results (.csv)', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='blast_csv', initial_folder = Path(path_to_outdirs).joinpath('10_local_BLAST'))],
                                     [sg.Text('4. Filter BLAST results', size=(25,1)), sg.Button('Go!', key='run_blast_filter'), sg.Text('Select taxonomy source:'), sg.Combo(['Diat.barcode', 'Mitofish/NCBI'], default_value='Mitofish/NCBI', key='taxonomy_collection')],
                                     [sg.Text('Species >='), sg.Spin([i for i in range(1,101)], initial_value=98),
                                     sg.Text('Genus >='), sg.Spin([i for i in range(1,101)], initial_value=95),

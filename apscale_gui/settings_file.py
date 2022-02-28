@@ -8,35 +8,55 @@ def load_settings(file):
     xl = pd.ExcelFile(file)
 
     ## store settings
-    settings = []
+    settings_dict = {}
 
     ## loop through sheets
     for sheet in xl.sheet_names:
         ## check each sheet for errors
         df = pd.read_excel(file, sheet_name=sheet).fillna('')
-        settings = settings + [str(df[i][0]) for i in df.columns.values.tolist()]
+        for value in df.columns.tolist():
+            settings_dict[value] = str(df[value].tolist()[0])
 
-    return settings
+    return settings_dict
 
 def apply_settings(file, settings):
     " Write settings from GUI to settings file "
 
+    settings_keys = ['settings_clustering_to_excel',
+                     'settings_maxdiffpct',
+                     'settings_maxdiffs',
+                     'settings_minovlen',
+                     'settings_p5_primer',
+                     'settings_p7_primer',
+                     'settings_anchoring',
+                     'settings_maxEE',
+                     'settings_min_length',
+                     'settings_max_length',
+                     'settings_derep_minsize',
+                     'settings_pct_id',
+                     'settings_alpha',
+                     'settings_min_size',
+                     'settings_min_sim',
+                     'settings_min_rel_coo',
+                     'settings_min_ratio']
+
     ## convert to in whenver possible
-    settings_converted = []
-    for i in settings:
+    settings_converted = {}
+    for key,value in settings.items():
         try:
-            settings_converted.append(int(i))
-        except:
-            settings_converted.append(i)
+            settings_converted[key] = int(value)
+        except Exception:
+            settings_converted[key] = value
 
     ## collect settings from the GUI
     df0 = pd.read_excel(file, sheet_name='0_general_settings')
-    df1 = pd.DataFrame([[settings_converted[0], settings_converted[1], settings_converted[2]]], columns=['maxdiffpct', 'maxdiffs', 'minovlen'])
-    df2 = pd.DataFrame([[settings_converted[3], settings_converted[4], settings_converted[5]]], columns=["P5 Primer (5' - 3')", "P7 Primer (5' - 3')", 'anchoring'])
-    df3 = pd.DataFrame([[settings_converted[6], settings_converted[7], settings_converted[8]]], columns=['maxEE', 'min length', 'max length'])
-    df4 = pd.DataFrame([[settings_converted[9]]], columns=['min size to pool'])
-    df5 = pd.DataFrame([[settings_converted[10], settings_converted[11], settings_converted[12]]], columns=['pct id', 'to excel', 'to parquet'])
-    df6 = pd.DataFrame([[settings_converted[13], settings_converted[14], settings_converted[15], settings_converted[16]]], columns=['alpha', 'minsize', 'to excel', 'to parquet'])
+    df1 = pd.DataFrame([[settings_converted['settings_maxdiffpct'], settings_converted['settings_maxdiffs'], settings_converted['settings_minovlen']]], columns=['maxdiffpct', 'maxdiffs', 'minovlen'])
+    df2 = pd.DataFrame([[settings_converted['settings_p5_primer'], settings_converted['settings_p7_primer'], settings_converted['settings_anchoring']]], columns=["P5 Primer (5' - 3')", "P7 Primer (5' - 3')", 'anchoring'])
+    df3 = pd.DataFrame([[settings_converted['settings_maxEE'], settings_converted['settings_min_length'], settings_converted['settings_max_length']]], columns=['maxEE', 'min length', 'max length'])
+    df4 = pd.DataFrame([[settings_converted['settings_derep_minsize']]], columns=['min size to pool'])
+    df5 = pd.DataFrame([[settings_converted['settings_pct_id'], settings_converted['settings_clustering_to_excel']]], columns=['pct id', 'to excel'])
+    df6 = pd.DataFrame([[settings_converted['settings_alpha'], settings_converted['settings_min_size'], settings_converted['settings_clustering_to_excel']]], columns=['alpha', 'minsize', 'to excel'])
+    df7 = pd.DataFrame([[settings_converted['settings_min_sim'], settings_converted['settings_min_rel_coo'], settings_converted['settings_min_ratio'], settings_converted['settings_clustering_to_excel']]], columns=['minimum similarity', 'minimum relative cooccurence', 'minimum ratio', 'to excel'])
 
 
     # Create a Pandas Excel writer using XlsxWriter as the engine.
@@ -50,6 +70,7 @@ def apply_settings(file, settings):
     df4.to_excel(writer, sheet_name='6_dereplication_pooling', index=False)
     df5.to_excel(writer, sheet_name='7_otu_clustering', index=False)
     df6.to_excel(writer, sheet_name='8_denoising', index=False)
+    df7.to_excel(writer, sheet_name='9_lulu_filtering', index=False)
 
 
     # Close the Pandas Excel writer and output the Excel file.

@@ -839,7 +839,7 @@ def blastn(query_fasta, blastn_database, project_folder, n_threads, task):
 
     ## create a new folder for each blast search
     blast_search = 'BLAST_' + query_fasta.stem + '_(' + datetime.datetime.now().strftime('%D_%H_%M').replace('/', '_') + ')'
-    blast_folder = Path(project_folder).joinpath('9_local_BLAST', blast_search)
+    blast_folder = Path(project_folder).joinpath('10_local_BLAST', blast_search)
     try:
         os.mkdir(blast_folder)
     except FileExistsError:
