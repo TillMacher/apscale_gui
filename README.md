@@ -149,7 +149,7 @@ The local BLAST tool rather simple to use.
 - The hit(s) with the lowest e-value are kept.
 - By taxonomy:
 - Hits with the same taxonomy are dereplicated.
-- Hits are adjusted according to thresholds (default: species >=98%, genus >=95%, family >=90%, order >=85%)
+- Hits are adjusted according to thresholds (default: species >=98%, genus >=95%, family >=90%, order >=85%) and dereplicated.
 - Hits with still conflicting taxonomy are set back to the most recent common taxonomy
 - OTU without matches are collected from the OTU table
 
