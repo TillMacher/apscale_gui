@@ -102,7 +102,7 @@ Create a new folder (e.g. on your desktop) and name it for example: 'APSCALE_pro
 
 Now run the APSCALE GUI with:
 
-`python -m apscale_gui`
+`python -m apscale_gui` or simply `apscale_gui`
 
 You will be asked to select an output directory.
 
@@ -171,4 +171,13 @@ Then download the .gb file!
 
 </details>
 
+Alternatively (for large datasets) one can use the Entrez-Direct tool: https://www.ncbi.nlm.nih.gov/books/NBK179288/
+
+The following command would download all 12S reference sequences for vertebrates:
+
+`esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields])' | efetch -format gbc > Desktop/vertebrate_sequences.gb`
+
+### My database is missing!
+
+Just let us know if there is need for further databases and we will try to add them.
 
