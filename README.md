@@ -154,7 +154,7 @@ APSCALE expects *demultiplexed .fastq.gz files* in the 2_demultiplexing/data fol
 If you prefer to have your data all in one place you can copy the raw data into 1_raw_data/data. However, demultiplexing won't be handled by APSCALE directly, but the GUI version has a demultiplexing tool implemented (see https://github.com/DominikBuchner/demultiplexer).
 
 
-### The interace
+### The interface
 When loading a project you will be greeted by the APSCALE home window.
 
 From here a multitude of DNA metabarcoding related tools can be started.
