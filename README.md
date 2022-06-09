@@ -121,8 +121,7 @@ When loading a project you will be greeted by the APSCALE home window.
 
 From here a multitude of DNA metabarcoding related tools can be started.
 
-Check out the Tutorial for a more detailed overview of the respective tools (COMING SOON).
-<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_gui.png" width="60%" height="60%">
+<img width="810" alt="image" src="https://user-images.githubusercontent.com/48299746/172805134-9a9166e7-8b88-472f-a742-f4b2e7d9526e.png">
 
 ### Running apscale: All-in-One Analysis
 The APSCALE pipeline can easily be started via the All-in-One window.
@@ -130,14 +129,28 @@ The APSCALE pipeline can easily be started via the All-in-One window.
 First, open the settings file (either from within the GUI or from the project folder). Then adjust all settings according to the data set.
 
 To run apscale, simply select the steps to run, click on 'Run analysis' and sit back and enjoy!
-<img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_run.png" width="50%" height="50%">
+<img width="958" alt="image" src="https://user-images.githubusercontent.com/48299746/172804927-b24730f0-530c-4653-9191-a0970ec95cde.png">
 
 ## Output
 
 Apscale will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
 BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of Apscale to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
 
+## Local BLAST
+
+The local BLAST tool rather simple to use.
+
+1. Select your sequences (.fasta) and OTU table (.xlsx).
+2. Build a new database from a source file (see available dabases below). This only needs to be done once.
+3. Select your database to perform the BLAST against.
+4. Run the BLAST (blastn is recommended)
+5. Filter the BLAST results. The hits per OTU will be filtered as follows:
+- By e-value: The hit(s) with the lowest e-value will be kept
+
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/48299746/172805346-f35884da-8727-4efd-a2a2-e5465450939e.png">
+
 ## Available databases for local BLAST
+
 
 ### Diat.barcode database
 Available from here: https://www6.inrae.fr/carrtel-collection_eng/Barcoding-database/Database-download
