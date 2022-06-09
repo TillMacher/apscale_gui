@@ -145,7 +145,13 @@ The local BLAST tool rather simple to use.
 3. Select your database to perform the BLAST against.
 4. Run the BLAST (blastn is recommended)
 5. Filter the BLAST results. The hits per OTU will be filtered as follows:
-- By e-value: The hit(s) with the lowest e-value will be kept
+- By e-value:
+- The hit(s) with the lowest e-value are kept.
+- By taxonomy:
+- Hits with the same taxonomy are dereplicated.
+- Hits are adjusted according to thresholds (default: species >=98%, genus >=95%, family >=90%, order >=85%)
+- Hits with still conflicting taxonomy are set back to the most recent common taxonomy
+- OTU without matches are collected from the OTU table
 
 <img width="700" alt="image" src="https://user-images.githubusercontent.com/48299746/172805346-f35884da-8727-4efd-a2a2-e5465450939e.png">
 
