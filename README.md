@@ -6,18 +6,18 @@ Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding dat
 [![Downloads](https://pepy.tech/badge/apscale_gui)](https://pepy.tech/project/apscale_gui)  - Apscale GUI
 
 ## Introduction
-The Apscale Graphical User Interface is a metabarcoding pipeline that handles the most common tasks in metabarcoding
+The APSCALE Graphical User Interface is a metabarcoding pipeline that handles the most common tasks in metabarcoding
 pipelines like paired-end merging, primer trimming, quality filtering, otu clustering and
 denoising. It uses a Graphical interface and is configured via a single configuration file.
 It automatically uses the available ressources on the machine it runs on while still providing the option
 to use less if desired.
 
-For more information on the pipeline running in the background visit [apscale](https://github.com/DominikBuchner/apscale).
+For more information on the pipeline running in the background visit [APSCALE](https://github.com/DominikBuchner/apscale).
 
 ## Installation
 
-Apscale can be installed on all common operating systems (Windows, Linux, MacOS).
-Apscale requires Python 3.7 or higher and can be easily installed via pip in any command line:
+APSCALE can be installed on all common operating systems (Windows, Linux, MacOS).
+APSCALE requires Python 3.7 or higher and can be easily installed via pip in any command line:
 
 `pip install apscale_gui`
 
@@ -27,7 +27,7 @@ To update apscale_gui run:
 
 ### Further dependencies - vsearch
 
-Apscale calls vsearch for multiple modules. It should be installed and be in PATH to be executed
+APSCALE calls vsearch for multiple modules. It should be installed and be in PATH to be executed
 from anywhere on the system.
 
 Check the vsearch Github page for further info:
@@ -65,8 +65,8 @@ Compiled with support for bzip2-compressed files, but the library was not found.
 
 ### Further dependencies - cutadapt
 
-Apscale also calls cutadapt with some modules. Cutadapt should be downloaded and installed
-automatically with the Apscale installation. To check this, type:
+APSCALE also calls cutadapt with some modules. Cutadapt should be downloaded and installed
+automatically with the APSCALE installation. To check this, type:
 
 `cutadapt --version`
 
@@ -76,7 +76,7 @@ and it should return the version number, for example:
 
 ### Further dependencies - blastn
 
-Apscale also calls blastn for the local blast modules. It should be installed and be in PATH to be executed
+APSCALE also calls blastn for the local blast modules. It should be installed and be in PATH to be executed
 from anywhere on the system.
 
 Check the BLAST Software home page:
@@ -173,14 +173,14 @@ Most settings can be left on default. However, following settings need to be adj
 - Reverse primer sequence (in 5'-3' orientation)
 - Length of the target fragment (after primer trimming)
 
-To run apscale, simply select the steps to perform, click on 'Run analysis' and sit back and enjoy!
+To run APSCALE, simply select the steps to perform, click on 'Run analysis' and sit back and enjoy!
 
 <img width="958" alt="image" src="https://user-images.githubusercontent.com/48299746/172804927-b24730f0-530c-4653-9191-a0970ec95cde.png">
 
 ## Output
 
-Apscale will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
-BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of Apscale to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
+APSCALE will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
+BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
 
 ## Local BLAST
 
