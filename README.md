@@ -186,6 +186,8 @@ BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly wit
 
 The local BLAST tool is really simple to use.
 
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/48299746/172805346-f35884da-8727-4efd-a2a2-e5465450939e.png">
+
 1. Select your sequences (.fasta) and OTU table (.xlsx).
 2. Build a new database from a source file (see available dabases below). This only needs to be done once.
 3. Select your database to perform the BLAST against.
@@ -199,7 +201,25 @@ The local BLAST tool is really simple to use.
 - Hits with still conflicting taxonomy are set back to the most recent common taxonomy
 - OTU without matches are collected from the OTU table
 
-<img width="700" alt="image" src="https://user-images.githubusercontent.com/48299746/172805346-f35884da-8727-4efd-a2a2-e5465450939e.png">
+The following exemplary BLAST results...
+
+| ID  | Hit  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity | E-Value |
+| -----  | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- | ----- |
+| OTU_1  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 3.43e-59 |
+| OTU_1  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 100 | 3.43e-59 |
+| OTU_2  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-51 |
+| OTU_3  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 1.05e-46 |
+| OTU_3  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 99 | 9.27e-16 |
+| OTU_3  | Hit_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Barbus | Barbus barbus  | 98 | 1.68e-12 |
+
+... would be filtered into a taxonomy table like this:
+
+| ID  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity |
+| -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- |
+| OTU_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  |  |  | 100 |
+| OTU_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | | 95 |
+| OTU_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
+
 
 ## Available databases for local BLAST
 
