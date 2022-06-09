@@ -177,7 +177,7 @@ To run APSCALE, simply select the steps to perform, click on 'Run analysis' and 
 
 <img width="958" alt="image" src="https://user-images.githubusercontent.com/48299746/172804927-b24730f0-530c-4653-9191-a0970ec95cde.png">
 
-## Output
+### Output
 
 APSCALE will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
 BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
