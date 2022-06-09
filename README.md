@@ -118,7 +118,7 @@ In this case a new, blank project folder was created.
 
 ### Data structure
 
-Apscale is organized in projects with the following structure:
+APSCALE is organized in projects with the following structure:
 
 <pre>
 /YOUR_PROJECT_PATH/My_new_project/
@@ -191,8 +191,8 @@ The local BLAST tool is really simple to use.
 3. Select your database to perform the BLAST against.
 4. Run the BLAST (blastn is recommended)
 5. Filter the BLAST results. The hits per OTU will be filtered as follows:
-- By e-value:
-- The hit(s) with the lowest e-value are kept.
+- By e-value (the e-value is the number of expected hits of similar quality which could be found just by chance):
+- The hit(s) with the lowest e-value are kept (the lower the e-value the better).
 - By taxonomy:
 - Hits with the same taxonomy are dereplicated.
 - Hits are adjusted according to thresholds (default: species >=98%, genus >=95%, family >=90%, order >=85%) and dereplicated.
