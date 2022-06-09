@@ -116,6 +116,44 @@ In this case a new, blank project folder was created.
 
 <img src="https://github.com/TillMacher/apscale_gui/blob/master/_data/apscale_start.png" width="40%" height="40%">
 
+### Data structure
+
+Apscale is organized in projects with the following structure:
+
+<pre>
+/YOUR_PROJECT_PATH/My_new_project/
+├───1_raw data
+│   └───data
+├───2_demultiplexing
+│   └───data
+├───3_PE_merging
+│   └───data
+├───4_primer_trimming
+│   └───data
+├───5_quality_filtering
+│   └───data
+├───6_dereplication_pooling
+│   └───data
+│       ├───dereplication
+│       └───pooling
+├───7_otu_clustering
+│   └───data
+├───8_denoising
+│   └───data
+└───9_lulu_filtering
+    ├───denoising
+    │   └───data
+    └───otu_filtering
+        └───data
+
+</pre>
+
+### Input data
+APSCALE expects *demultiplexed .fastq.gz files* in the 2_demultiplexing/data folder.
+
+If you prefer to have your data all in one place you can copy the raw data into 1_raw_data/data. However, demultiplexing won't be handled by APSCALE directly, but the GUI version has a demultiplexing tool implemented (see https://github.com/DominikBuchner/demultiplexer).
+
+
 ### The interace
 When loading a project you will be greeted by the APSCALE home window.
 
@@ -126,9 +164,17 @@ From here a multitude of DNA metabarcoding related tools can be started.
 ### Running apscale: All-in-One Analysis
 The APSCALE pipeline can easily be started via the All-in-One window.
 
-First, open the settings file (either from within the GUI or from the project folder). Then adjust all settings according to the data set.
+First, the settings need to be adjusted.
+Therefore, one can either adjust the settings from within the GUI and apply them via the green button.
+Or one can open the settings file (either from within the GUI or from the project folder) and adjust all settings according to the data set.
 
-To run apscale, simply select the steps to run, click on 'Run analysis' and sit back and enjoy!
+Most settings can be left on default. However, following settings need to be adjusted:
+- Forward primer sequence (in 5'-3' orientation)
+- Reverse primer sequence (in 5'-3' orientation)
+- Length of the target fragment (after primer trimming)
+
+To run apscale, simply select the steps to perform, click on 'Run analysis' and sit back and enjoy!
+
 <img width="958" alt="image" src="https://user-images.githubusercontent.com/48299746/172804927-b24730f0-530c-4653-9191-a0970ec95cde.png">
 
 ## Output
@@ -138,7 +184,7 @@ BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly wit
 
 ## Local BLAST
 
-The local BLAST tool rather simple to use.
+The local BLAST tool is really simple to use.
 
 1. Select your sequences (.fasta) and OTU table (.xlsx).
 2. Build a new database from a source file (see available dabases below). This only needs to be done once.
