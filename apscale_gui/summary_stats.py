@@ -63,7 +63,7 @@ def plot_heatmap(file, unit, project):
     out_html = Path(project).joinpath('0_statistics', 'Summary_statistics', unit + '_heatmap.html')
     fig.write_html(str(out_html))
 
-def plot_reads(Project_report, unit, project, ESV_table_lulu, OTU_table_lulu):
+def plot_reads(Project_report, project, ESV_table_lulu, OTU_table_lulu):
 
     df_3 = pd.read_excel(Project_report, sheet_name='3_PE merging')
     df_4 = pd.read_excel(Project_report, sheet_name='4_primer_trimming')
@@ -94,7 +94,7 @@ def plot_reads(Project_report, unit, project, ESV_table_lulu, OTU_table_lulu):
     df_stats['Trimmed reads'] = trimmed_reads + stats_trimmed_reads
     df_stats['Filtered reads'] = filtered_reads + stats_filtered_reads
     df_stats['Mapped reads (OTUs)'] = mapped_reads_OTUs + stats_mapped_reads_OTUs
-    df_stats['Mapped reads (ESVs'] = mapped_reads_ESVs + stats_mapped_reads_ESVs
+    df_stats['Mapped reads (ESVs)'] = mapped_reads_ESVs + stats_mapped_reads_ESVs
     df_stats.index = samples + ['_minimum', '_maximum', '_average', '_median', '_deviation']
     out_xlsx = Path(project).joinpath('0_statistics', 'Summary_statistics/summary_stats.xlsx')
     df_stats.to_excel(out_xlsx)
@@ -160,7 +160,7 @@ def main(project = Path.cwd()):
 
     ############################################################################
     ## read progress
-
+    plot_reads(Project_report, project, ESV_table_lulu, OTU_table_lulu)
 
 if __name__ == "__main__":
     main()
