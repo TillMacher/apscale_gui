@@ -231,10 +231,10 @@ These files can be used for taxonomic assignment. For example, for COI sequences
 ├───6_dereplication_pooling
 │   └───data
 │       ├───dereplication
-│       │   ├───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
-│       │   ├───SAMPLE_1_b_PE_trimmed_filtered.fastq.gz
-│       │   ├───SAMPLE_2_a_PE_trimmed_filtered.fastq.gz
-│       │   ├───SAMPLE_2_b_PE_trimmed_filtered.fastq.gz
+│       │   ├───SAMPLE_1_a_PE_trimmed_filtered_dereplicated.fastq.gz
+│       │   ├───SAMPLE_1_b_PE_trimmed_filtered_dereplicated.fastq.gz
+│       │   ├───SAMPLE_2_a_PE_trimmed_filtered_dereplicated.fastq.gz
+│       │   ├───SAMPLE_2_b_PE_trimmed_filtered_dereplicated.fastq.gz
 │       │   └───...
 │       └───pooling
 │           ├───pooled_sequences_dereplicated.fasta.gz
