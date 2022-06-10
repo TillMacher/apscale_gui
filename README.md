@@ -180,12 +180,15 @@ To run APSCALE, simply select the steps to perform, click on 'Run analysis' and 
 
 ### Output
 
-APSCALE will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
-BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
+APSCALE will create following output files (that are relevant for downstream analyses):
+- Lulu-filtered OTU table (.xlsx and .snappy)
+- Lulu-filtered OTU sequences (.fasta)
+- Lulu-filtered ESV table (.xlsx and .snappy)
+- Lulu-filtered ESV sequences (.fasta)
 
-Following files will be created:
+These files can be used for taxonomic assignment. For example, for COI sequences, BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
 
-<details><summary> Exemplary APSCALE project </summary>
+<details><summary> Click here to an exemplary APSCALE project </summary>
 
 <pre>
 /YOUR_PROJECT_PATH/My_new_project/
@@ -238,13 +241,11 @@ Following files will be created:
 │           └───pooled_sequences.fasta.gz
 ├───7_otu_clustering
 │   └───data
-│   │   └───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
 │   ├───tutorial_apscale_OTU_table.parquet.snappy
 │   ├───tutorial_apscale_OTU_table.xlsx
 │   └───tutorial_apscale_OTUs.fasta
 ├───8_denoising
 │   └───data
-│   │   └───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
 │   ├───tutorial_apscale_ESV_table.parquet.snappy
 │   ├───tutorial_apscale_ESV_table.xlsx
 │   └───tutorial_apscale_ESVs.fasta
