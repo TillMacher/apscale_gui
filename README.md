@@ -416,6 +416,13 @@ You can check out some examples below:
 
 </details>
 
+<details><summary> LULU filtering </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173078145-e75d5401-343d-4484-a4b7-da52fc1410d3.png)
+
+</details>
+
+
 ## Local BLAST
 
 The local BLAST tool is really simple to use.
