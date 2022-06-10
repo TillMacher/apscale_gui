@@ -16,8 +16,9 @@ from apscale.a_create_project import create_project
 from apscale_gui.blast_utilities import subset_fasta
 from apscale_gui.blast_utilities import blast_xml_to_taxonomy
 from apscale_gui.blast_utilities import create_database_diat_barcode
+from apscale_gui.blast_utilities import create_database_midori2
 from apscale_gui.blast_utilities import blastn
-from apscale_gui.blast_utilities import filter_blastn_results_diatbarcode
+from apscale_gui.blast_utilities import filter_blast_results
 from apscale_gui.blast_utilities import filter_blastn_results_NCBI
 from apscale_gui.blast_utilities import create_database_NCBI
 from apscale_gui.summary_stats import main as summary_stats
@@ -31,7 +32,7 @@ from lastversion import lastversion
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.1.0'
+apscale_version = '1.1.2'
 
 ## check for the latest version of TTT
 try:
@@ -693,6 +694,8 @@ def main():
             if event == 'open_local_blast':
                 MP_window.hide()
 
+                reference_databases = ['Diat.barcode', 'Custom NCBI', 'Midori2']
+
                 layout_local_blast = [
                 					[sg.Text('Local BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
                 					[sg.Text('_'*90)],
@@ -701,32 +704,28 @@ def main():
                                     [sg.Text('1. Select your fasta file:', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='local_blast_fasta_file', initial_folder = path_to_outdirs)],
                                     [sg.Text('2. Select your read table:', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='local_blast_read_table', initial_folder = path_to_outdirs)],
                                     [sg.Text('', size=(90,1))],
-                                    ], title='Files')],
+                                    ], title='Load required files')],
 
-                                    [sg.Text(''), sg.Frame(layout=[
-                                    [sg.Text('1. Download the latest diat.barcode version from here:', size=(50,1)), sg.Button('Download', key='open_download_diatbarcode')],
-                                    [sg.Text('2. Build a database from'), sg.Input('', size=(10,1)), sg.FileBrowse(key='diatbarcode_xlsx', initial_folder = path_to_outdirs), sg.Text('(.xlsx)'), sg.Button('Go!', key='build_diat_barcode_database')],
-                                    [sg.Text('', size=(87,1))],
-                                    ], title='Diat. barcode database')],
-
-                                    [sg.Text(''), sg.Frame(layout=[
-                                    [sg.Text('1.1 Create your own custom NCBI database', size=(50,1)), sg.Button('Learn more', key='open_custom_db_tutorial')],
-                                    [sg.Text('1.2 Download the latest MitoFish database:', size=(50,1)), sg.Button('Download', key='open_download_mitofish')],
-                                    [sg.Text('2. Build a database from'), sg.Input('', size=(10,1)), sg.FileBrowse(key='ncbi_fasta', initial_folder = path_to_outdirs), sg.Text('(.fasta)'), sg.Button('Go!', key='build_NCBI_database')],
-                                    [sg.Text('', size=(87,1))],
-                                    ], title='NCBI database')],
+                                    [sg.Frame(layout=[
+                                    [sg.Text('1. Select a database format:', size=(25,1)), sg.Combo(reference_databases, default_value='Diat.barcode', key='database_selection'),
+                                    sg.Text('Get more information about the database:'), sg.Button(' ? ', key='database_info')],
+                                    [sg.Text('2. Select database source file:', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='database_source_file', initial_folder = path_to_outdirs)],
+                                    [sg.Text('3. Build a new database:', size=(25,1)), sg.Button('Go', key='database_builder')],
+                                    [sg.Text('', size=(90,1))],
+                                    ], title='Build a new database')],
 
                                     [sg.Frame(layout=[
                                     [sg.Text('1. Select a database', size=(25,1)), sg.Input('', size=(10,1)), sg.FolderBrowse(key='blast_database', initial_folder = databases_path)],
                                     [sg.Text('2. Run BLASTn', size=(25,1)), sg.Button('Go!', key='run_blast'), sg.Combo(['Highly similar sequences (megablast)', 'More dissimilar sequences (discontiguous megablast)', 'Somewhat similar sequences (blastn)'], default_value='Somewhat similar sequences (blastn)', key='blast_task')],
+                                    [sg.Text('')],
                                     [sg.Text('3. Select BLAST results (.csv)', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='blast_csv', initial_folder = Path(path_to_outdirs).joinpath('10_local_BLAST'))],
-                                    [sg.Text('4. Filter BLAST results', size=(25,1)), sg.Button('Go!', key='run_blast_filter'), sg.Text('Select taxonomy source:'), sg.Combo(['Diat.barcode', 'Mitofish/NCBI'], default_value='Mitofish/NCBI', key='taxonomy_collection')],
-                                    [sg.Text('Species >='), sg.Spin([i for i in range(1,101)], initial_value=98),
-                                    sg.Text('Genus >='), sg.Spin([i for i in range(1,101)], initial_value=95),
-                                    sg.Text('Family >='), sg.Spin([i for i in range(1,101)], initial_value=90),
-                                    sg.Text('Order >='), sg.Spin([i for i in range(1,101)], initial_value=85)],
+                                    [sg.Text('4. Filter BLAST results', size=(25,1)), sg.Button('Go!', key='run_blast_filter'), sg.Text('Select taxonomy source:'), sg.Combo(reference_databases, default_value=reference_databases[0], key='database_taxonomy_source')],
+                                    [sg.Text('Species >='), sg.Spin([i for i in range(1,101)], initial_value=98, key='threshold_species'),
+                                    sg.Text('Genus >='), sg.Spin([i for i in range(1,101)], initial_value=95, key='threshold_genus'),
+                                    sg.Text('Family >='), sg.Spin([i for i in range(1,101)], initial_value=90, key='threshold_family'),
+                                    sg.Text('Order >='), sg.Spin([i for i in range(1,101)], initial_value=85, key='threshold_order')],
                                     [sg.Text('', size=(90,1))],
-                                    ], title='BLASTn')],
+                                    ], title='Assign taxonomy using BLASTn')],
 
                                     [sg.Text('',size=(1,1))],
                                     [sg.Button('Exit', button_color=('black', 'red'))]
@@ -743,17 +742,26 @@ def main():
                         blast_window.close()
                         break
 
-                    if event == 'build_diat_barcode_database':
-                        if values2['diatbarcode_xlsx'] == '':
-                            sg.Popup('Please provide the diat.barcode.xlsx file!', title='Error')
-                        else:
-                            create_database_diat_barcode(values2['diatbarcode_xlsx'], project_folder, databases_path)
+                    if event == 'database_info':
+                        webbrowser.open('https://github.com/TillMacher/apscale_gui#available-databases-for-local-blast')
 
-                    if event == 'build_NCBI_database':
-                        if values2['ncbi_fasta'] == '':
-                            sg.Popup('Please provide a .fasta file!', title='Error')
-                        else:
-                            create_database_NCBI(values2['ncbi_fasta'], project_folder, databases_path)
+                    if event == 'database_builder':
+
+                        blast_window.Hide()
+
+                        if values2['database_source_file'] == '':
+                            sg.Popup('Please provide the database source file!', title='Error')
+
+                        elif values2['database_selection'] == 'Diat.barcode':
+                            create_database_diat_barcode(values2['database_source_file'], project_folder, databases_path)
+
+                        elif values2['database_selection'] == 'Custom NCBI':
+                            create_database_NCBI(values2['database_source_file'], project_folder, databases_path)
+
+                        elif values2['database_selection'] == 'Midori2':
+                            create_database_midori2(values2['database_source_file'], project_folder, databases_path)
+
+                        blast_window.UnHide()
 
                     if event == 'run_blast':
                         if values2['local_blast_fasta_file'] == '' or values2['local_blast_read_table'] == '' or values2['blast_database'] == '':
@@ -770,31 +778,19 @@ def main():
                             sg.Popup('Please provide all files!', title='Error')
                         else:
                             blast_window.Hide()
-                            sg.Popup('Starting to filter BLAST results!\nThis may take a while!', title='Finished')
 
-                            ## NCBI taxonomy
-                            if values2['taxonomy_collection'] == 'Mitofish/NCBI':
-                                sg.Popup('Try to run the filter module during off-peak hours!\n\nThis module assesses the NCBI database to collect the taxonomy of the respective reference sequence.\n\nThis can lead to server timeouts when sending too many requests.', title='Warning')
-                                filter_blastn_results_NCBI(values2['blast_csv'], values2['local_blast_read_table'], project_folder)
+                            ## ask if the correct database was selected.
+                            answer = sg.PopupOKCancel('You selected \'{}\' as taxonomy source. Is that correct?'.format(values2['database_taxonomy_source']))
+                            if answer == 'OK':
+                                sg.Popup('Starting to filter BLAST results!\nThis may take a while!', title='Finished')
 
-                            ## Diat.barcode taxonomy
-                            elif  values2['taxonomy_collection'] == 'Diat.barcode':
-                                if values2['diatbarcode_xlsx'] == '':
-                                    sg.Popup('Please provide the Diat.barcode.xlsx file!')
-                                else:
-                                    filter_blastn_results_diatbarcode(values2['blast_csv'], values2['local_blast_read_table'], values2['diatbarcode_xlsx'], project_folder)
+                                ## filter blast results
+                                filter_tresholds = [int(values2['threshold_species']), int(values2['threshold_genus']), int(values2['threshold_family']), int(values2['threshold_order'])]
+                                filter_blast_results(values2['blast_csv'], values2['local_blast_read_table'], project_folder, databases_path, filter_tresholds, values2['database_taxonomy_source'])
 
-                            sg.Popup('Finished filtering BLAST results!', title='Finished')
+                                sg.Popup('Finished filtering BLAST results!', title='Finished')
+
                             blast_window.UnHide()
-
-                    if event == 'open_download_diatbarcode':
-                        webbrowser.open('https://data.inrae.fr/dataset.xhtml?persistentId=doi:10.15454/TOMBYZ')
-
-                    if event == 'open_download_mitofish':
-                        webbrowser.open('http://mitofish.aori.u-tokyo.ac.jp/download.html')
-
-                    if event == 'open_custom_db_tutorial':
-                        webbrowser.open('https://github.com/TillMacher/_data/custom_db.pdf')
 
                 blast_window.close()
                 MP_window.UnHide()

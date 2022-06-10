@@ -6,8 +6,22 @@ from joblib import Parallel, delayed
 import plotly.graph_objects as go
 import plotly.express as px
 from statistics import mean
+from statistics import median
+from statistics import stdev
 import numpy as np
 import PySimpleGUI as sg
+
+############################################################################
+## general function
+
+def calculate_read_stats(lst):
+    minimum = min(lst)
+    maximum = max(lst)
+    average = round(mean(lst),2)
+    med = round(median(lst),2)
+    deviation = round(stdev(lst),2)
+
+    return([minimum, maximum, average, med, deviation])
 
 ## Plot a heatmap of the ESV or OTU table
 def plot_heatmap(file, unit, project):
@@ -49,114 +63,71 @@ def plot_heatmap(file, unit, project):
     out_html = Path(project).joinpath('0_statistics', 'Summary_statistics', unit + '_heatmap.html')
     fig.write_html(str(out_html))
 
-## Plot the number of reads of the whole dataset across the processing
-def pipeline_stats_bar(Project_report, OTU_table, ESV_table, project):
-    """ Function to plot a the number of processed reads along the processing """
+def plot_reads(Project_report, unit, project, ESV_table_lulu, OTU_table_lulu):
 
-    # Project_report = '/Users/tillmacher/Dropbox/Insta_Upload/Project_report.xlsx'
-    # OTU_table = '/Users/tillmacher/Dropbox/Insta_Upload/Test_OTU_table.xlsx'
-    # ESV_table = '/Users/tillmacher/Dropbox/Insta_Upload/Test_ESV_table.xlsx'
+    df_3 = pd.read_excel(Project_report, sheet_name='3_PE merging')
+    df_4 = pd.read_excel(Project_report, sheet_name='4_primer_trimming')
+    df_5 = pd.read_excel(Project_report, sheet_name='5_quality_filtering')
+    df_7 = pd.read_excel(Project_report, sheet_name='7_otu_clustering')
+    df_9_OTUs = pd.read_excel(OTU_table_lulu)
+    df_9_ESVs = pd.read_excel(ESV_table_lulu)
 
-    ## raw reads and PE merging results
-    pe_merging = pd.read_excel(Project_report, sheet_name='3_PE merging')
-    reads_1 = pe_merging['processed reads'].values.tolist()
-    reads_total = sum(reads_1)
-    reads_2 = pe_merging['merged reads'].values.tolist()
-    ## primer trimming results
-    primer_trimming = pd.read_excel(Project_report, sheet_name='4_primer_trimming')
-    reads_3 = primer_trimming['trimmed reads'].values.tolist()
-    ## quality filtering results
-    quality_filtering = pd.read_excel(Project_report, sheet_name='5_quality_filtering')
-    reads_4 = quality_filtering['passed reads']
-    ## Denoising results
-    denoising = pd.read_excel(ESV_table).drop(columns=['ID', 'Seq'])
-    reads_5 = [sum(denoising[sample].values.tolist()) for sample in denoising.columns.tolist()]
-    ## OTU clustering results
-    otu_clustering = pd.read_excel(OTU_table).drop(columns=['ID', 'Seq'])
-    reads_6 = [sum(otu_clustering[sample].values.tolist()) for sample in otu_clustering.columns.tolist()]
+    samples = df_7['File'].values.tolist()
+    raw_reads = df_3['processed reads'].values.tolist()
+    merged_reads = df_3['merged reads'].values.tolist()
+    trimmed_reads = df_4['trimmed reads'].values.tolist()
+    filtered_reads = df_5['passed reads'].values.tolist()
+    mapped_reads_OTUs = [sum(df_9_OTUs[sample].values.tolist()) for sample in samples]
+    mapped_reads_ESVs = [sum(df_9_ESVs[sample].values.tolist()) for sample in samples]
 
-    ## bar chart categories
-    ## Bar no 1: Sum of reads left after the processing step
-    ## Bar no 2: Difference to number of total reads
-    # PE merging
-    bar_1_1 = sum(reads_2)
-    bar_1_2 = reads_total - bar_1_1
-    # Primer trimming
-    bar_2_1 = sum(reads_3)
-    bar_2_2 = reads_total - bar_2_1
-    # Quality filtering
-    bar_3_1 = sum(reads_4)
-    bar_3_2 = reads_total - bar_3_1
-    # Denoising
-    bar_4_1 = sum(reads_5)
-    bar_4_2 = reads_total - bar_4_1
-    # OTU clustering
-    bar_5_1 = sum(reads_6)
-    bar_5_2 = reads_total - bar_5_1
+    stats_raw_reads = calculate_read_stats(raw_reads)
+    stats_merged_reads = calculate_read_stats(merged_reads)
+    stats_trimmed_reads = calculate_read_stats(trimmed_reads)
+    stats_filtered_reads = calculate_read_stats(filtered_reads)
+    stats_mapped_reads_OTUs = calculate_read_stats(mapped_reads_OTUs)
+    stats_mapped_reads_ESVs = calculate_read_stats(mapped_reads_ESVs)
 
+    ## dataframe
+    df_stats = pd.DataFrame()
+    df_stats['Raw reads'] = raw_reads + stats_raw_reads
+    df_stats['Merged reads'] = merged_reads + stats_merged_reads
+    df_stats['Trimmed reads'] = trimmed_reads + stats_trimmed_reads
+    df_stats['Filtered reads'] = filtered_reads + stats_filtered_reads
+    df_stats['Mapped reads (OTUs)'] = mapped_reads_OTUs + stats_mapped_reads_OTUs
+    df_stats['Mapped reads (ESVs'] = mapped_reads_ESVs + stats_mapped_reads_ESVs
+    df_stats.index = samples + ['_minimum', '_maximum', '_average', '_median', '_deviation']
+    out_xlsx = Path(project).joinpath('0_statistics', 'Summary_statistics/summary_stats.xlsx')
+    df_stats.to_excel(out_xlsx)
+
+    ## plot OTUs
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=['PE merging'], y=[bar_1_1], marker_color='Blue'))
-    fig.add_trace(go.Bar(x=['PE merging'], y=[bar_1_2], marker_color='Orange'))
-
-    fig.add_trace(go.Bar(x=['Primer trimming'], y=[bar_2_1], marker_color='Blue'))
-    fig.add_trace(go.Bar(x=['Primer trimming'], y=[bar_2_2], marker_color='Orange'))
-
-    fig.add_trace(go.Bar(x=['Quality filtering'], y=[bar_3_1], marker_color='Blue'))
-    fig.add_trace(go.Bar(x=['Quality filtering'], y=[bar_3_2], marker_color='Orange'))
-
-    fig.add_trace(go.Bar(x=['Denoising'], y=[bar_4_1], marker_color='Blue'))
-    fig.add_trace(go.Bar(x=['Denoising'], y=[bar_4_2], marker_color='Orange'))
-
-    fig.add_trace(go.Bar(x=['OTU clustering'], y=[bar_5_1], marker_color='Blue'))
-    fig.add_trace(go.Bar(x=['OTU clustering'], y=[bar_5_2], marker_color='Orange'))
-
-    fig.update_layout(template='simple_white', width=800, height=500, showlegend=False, barmode='stack')
-    fig.update_yaxes(title='Reads')
-
-    ## write image
-    out_pdf = Path(project).joinpath('0_statistics', 'Summary_statistics', 'Summary_statistics_bar.pdf')
-    fig.write_image(str(out_pdf))
-    out_html = Path(project).joinpath('0_statistics', 'Summary_statistics', 'Summary_statistics_bar.html')
+    for sample in samples:
+        y_values = df_stats.loc[sample].values.tolist()[:-1]
+        x_values = df_stats.columns.tolist()[:-1]
+        fig.add_trace(go.Scatter(x=x_values, marker_color='navy', y=y_values, name=sample))
+        fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per sample for each module')
+    out_html = Path(project).joinpath('0_statistics', 'Summary_statistics/{}_scatter.html'.format('OTUs'))
     fig.write_html(str(out_html))
 
-## Plot the number of reads per sample (as boxplot) across the processing
-def pipeline_stats_box(Project_report, OTU_table, ESV_table, project):
-    """ Function to plot a the number of processed reads along the processing """
-
-    ## raw reads and PE merging results
-    pe_merging = pd.read_excel(Project_report, sheet_name='3_PE merging')
-    reads_1 = pe_merging['processed reads'].values.tolist()
-    reads_total = sum(reads_1)
-    reads_2 = pe_merging['merged reads'].values.tolist()
-    ## primer trimming results
-    primer_trimming = pd.read_excel(Project_report, sheet_name='4_primer_trimming')
-    reads_3 = primer_trimming['trimmed reads'].values.tolist()
-    ## quality filtering results
-    quality_filtering = pd.read_excel(Project_report, sheet_name='5_quality_filtering')
-    reads_4 = quality_filtering['passed reads']
-    ## Denoising results
-    denoising = pd.read_excel(ESV_table).drop(columns=['ID', 'Seq'])
-    reads_5 = [sum(denoising[sample].values.tolist()) for sample in denoising.columns.tolist()]
-    ## OTU clustering results
-    otu_clustering = pd.read_excel(OTU_table).drop(columns=['ID', 'Seq'])
-    reads_6 = [sum(otu_clustering[sample].values.tolist()) for sample in otu_clustering.columns.tolist()]
-
+    ## plot ESVs
     fig = go.Figure()
-    fig.add_trace(go.Box(y=reads_1, name='Raw reads', marker_color='Blue'))
-    fig.add_trace(go.Box(y=reads_2, name='PE merging', marker_color='Blue'))
-    fig.add_trace(go.Box(y=reads_3, name='Primer trimming', marker_color='Blue'))
-    fig.add_trace(go.Box(y=reads_4, name='Quality filtering', marker_color='Blue'))
-    fig.add_trace(go.Box(y=reads_5, name='Denoising', marker_color='Blue'))
-    fig.add_trace(go.Box(y=reads_6, name='OTU clustering', marker_color='Blue'))
-
-    fig.update_layout(template='simple_white', width=800, height=500, showlegend=False)
-    fig.update_yaxes(title='Reads')
-
-    ## write image
-    out_pdf = Path(project).joinpath('0_statistics', 'Summary_statistics', 'Summary_statistics_box.pdf')
-    fig.write_image(str(out_pdf))
-    out_html = Path(project).joinpath('0_statistics', 'Summary_statistics', 'Summary_statistics_box.html')
+    for sample in samples:
+        y_values = df_stats.loc[sample].values.tolist()[:-2] + [df_stats.loc[sample].values.tolist()[-1]]
+        x_values = df_stats.columns.tolist()[:-2] + [df_stats.columns.tolist()[-1]]
+        fig.add_trace(go.Scatter(x=x_values, marker_color='navy', y=y_values, name=sample))
+        fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per sample for each module')
+    out_html = Path(project).joinpath('0_statistics', 'Summary_statistics/{}_scatter.html'.format('ESVs'))
     fig.write_html(str(out_html))
+
+    ## plot stats
+    fig = go.Figure()
+    for category in df_stats.columns.tolist():
+        y_values = df_stats.loc[samples][category].values.tolist()
+        fig.add_trace(go.Box(y=y_values, name=category, marker_color = 'navy'))
+    fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per module')
+    out_html = Path(project).joinpath('0_statistics', 'Summary_statistics/boxplot.html')
+    fig.write_html(str(out_html))
+
 
 ## main function to call the script
 def main(project = Path.cwd()):
@@ -179,28 +150,17 @@ def main(project = Path.cwd()):
 
     ## collect required files
     Project_report = Path(project).joinpath('Project_report.xlsx')
-    OTU_table = Path(project).joinpath('7_otu_clustering', project_name + '_OTU_table.xlsx')
-    ESV_table = Path(project).joinpath('8_denoising', project_name + '_ESV_table.xlsx')
+    OTU_table_lulu = Path(project).joinpath('9_lulu_filtering/otu_clustering', project_name + '_OTU_table_filtered.xlsx')
+    ESV_table_lulu = Path(project).joinpath('9_lulu_filtering/denoising', project_name + '_ESV_table_filtered.xlsx')
 
-    ## check if all files exist
-    if os.path.isfile(Project_report) and os.path.isfile(OTU_table) and os.path.isfile(ESV_table):
-        ## Plot ESV and OTUs as a heatmap
-        print('{}: Creating ESV heatmap.'.format(datetime.datetime.now().strftime("%H:%M:%S")))
-        plot_heatmap(ESV_table, 'ESV', project)
-        print('{}: Creating OTU heatmap.'.format(datetime.datetime.now().strftime("%H:%M:%S")))
-        plot_heatmap(OTU_table, 'OTU', project)
+    ############################################################################
+    ## OTUs and ESVs
+    plot_heatmap(OTU_table_lulu, 'OTU', project)
+    plot_heatmap(ESV_table_lulu, 'ESV', project)
 
-        ## Plot the number of reads of the whole dataset across the processing
-        print('{}: Creating bar charts.'.format(datetime.datetime.now().strftime("%H:%M:%S")))
-        pipeline_stats_bar(Project_report, OTU_table, ESV_table, project)
+    ############################################################################
+    ## read progress
 
-        ## Plot the number of reads per sample (as boxplot) across the processing
-        print('{}: Creating box plots.'.format(datetime.datetime.now().strftime("%H:%M:%S")))
-        pipeline_stats_box(Project_report, OTU_table, ESV_table, project)
-
-    else:
-        print('{}: Warning: Please first run the whole pipeline and make sure that following files exist:\n -Project report\n -OTU table\n -ESV table'.format(datetime.datetime.now().strftime("%H:%M:%S")))
-        sg.Popup('Warning: Please first run the whole pipeline and make sure that following files exist:\n -Project report\n -OTU table\n -ESV table', title='Error')
 
 if __name__ == "__main__":
     main()
