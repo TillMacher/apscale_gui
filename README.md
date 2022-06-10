@@ -269,43 +269,110 @@ These files can be used for taxonomic assignment. For example, for COI sequences
 
 ### Demultiplexing
 
-<details><summary> OTU heatmap (all samples; log of reads) </summary>
+<details><summary> Learn more </summary>
 
 ![image](https://user-images.githubusercontent.com/48299746/173058747-e1589d38-7a7c-493d-8f87-427b18475378.png)
 
+Raw reads are demultiplexed into individual files, based on indiced and/or tags (see [Bohmann et al., 2022](https://doi.org/10.1111/1755-0998.13512) for an overview)
+  
 </details>
 
-### PE merging
+### Paired-end merging
 
-<details><summary> OTU heatmap (all samples; log of reads) </summary>
+<details><summary> Learn more </summary>
 
-![newplot (6)](https://user-images.githubusercontent.com/48299746/173051725-b3756ed0-34b8-4756-84ac-679dda9a1c66.png)
+![image](https://user-images.githubusercontent.com/48299746/173062975-18f7f8d6-b2fb-4ec7-9ab1-72597b620770.png)
 
+Paired-end reads are merged into a single read.
+  
 </details>
 
 ### Primer trimming
 
-text
+<details><summary> Learn more </summary>
 
-### Quality filtering
+![image](https://user-images.githubusercontent.com/48299746/173063025-72ed4de0-d3f4-4a99-b7a0-22f3f10c4d2c.png)
+  
+Adapter or primer sequences are removed from each read.
+  
+</details>
+  
+### Quality & length filtering
 
-text
+<details><summary> Learn more </summary>
+ 
+![image](https://user-images.githubusercontent.com/48299746/173065000-86700cf8-8f79-45f3-8d68-2e3e15b113dd.png)
+
+Reads are filtered according to the expected length of the target fragment. Usually a certain threshold around the expected length is applied (e.g., +-10 of the target fragment length).
+  
+![image](https://user-images.githubusercontent.com/48299746/173064244-f70439ee-3cd2-4646-b290-d648c231ccb4.png)
+
+Additionally reads are filtered by quality. APSCALE uses the 'maximum expected error' value for quality filtering, which is calculated based on Phred quality score. You can learn more about quality filtering in the [usearch documentation](https://www.drive5.com/usearch/manual/exp_errs.html).
+  
+</details>
 
 ### Dereplication & pooling
 
-text
+<details><summary> Learn more </summary>
+  
+![image](https://user-images.githubusercontent.com/48299746/173064538-293c9661-f239-4620-8735-9035fe091682.png)
 
-### OTU_clustering
+Initially, reads are dereplicated per sample. Only reads with an abundance of at least 4 (default value) are kept.
+  
+![image](https://user-images.githubusercontent.com/48299746/173064752-082721fb-5afb-423c-af48-6ab9578e684d.png)
 
-text
+Then, reads are pooled into a single file and globally dereplicated. The pooled and dereplicated reads are used for clustering and denoising.
+  
+</details>
+
+### OTU clustering
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173063360-7e624d90-bc6e-4ca8-aa62-60bc931e83ef.png)
+  
+Reads are clustered into Operational Taxonomic Units (OTUs), based on a similarity threshold (e.g., 97% similarity).
+  
+</details>
 
 ### Denoising (ESVs)
 
-text
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173068170-07143e8a-b3e7-4de9-867c-5cccca7147e1.png)
+
+Reads are denoised into Exact Sequence Variants (ESVs). Here, neighbours with small numbers of differences and small abundance compared to X are predicted to be bad reads of X (see [Edgar 2016](https://doi.org/10.1101/081257) for more details). Denoising is an error removal step.
+  
+</details>
+
+### Chimera removal (both for OTUs and ESVs)
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173065405-45ad9244-6cbb-4906-9f96-a33626b42cfd.png)
+
+Chimeras are artificial products derived from two biological sequences. They can occur through incomplete extension during PCR. You can learn more about chimeras in the [usearch documentation](https://drive5.com/usearch/manual/chimeras.html). Chimeras are removed from the OTUs and ESVs.
+  
+</details>
 
 ### LULU filtering
 
-text
+<details><summary> Learn more </summary>
+
+Coming soon!
+  
+</details>
+
+### Re-mapping
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173067396-d118989a-faff-48ab-9cf3-34e64cdac7c1.png)
+ 
+Lastly, OTUs and ESVs are re-mapped to the sequences of each sample and read tables are created.
+  
+</details>
+
 
 ## Summary statistics
 
