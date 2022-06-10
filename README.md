@@ -437,7 +437,7 @@ The local BLAST tool is really simple to use.
 
 The following exemplary BLAST results...
 
-| ID  | Hit  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity | E-Value |
+| ID  | Hit  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity (%) | E-Value |
 | -----  | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- | ----- |
 | OTU_1  | Hit_1  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 | 3.33e-68 |
 | OTU_1  | Hit_2  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 | 3.33e-68 |
@@ -451,7 +451,7 @@ The following exemplary BLAST results...
 
 ... would be filtered into a taxonomy table like this:
 
-| ID  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity |
+| ID  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity (%) |
 | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- |
 | OTU_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
 | OTU_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  |  |  | 100 |
