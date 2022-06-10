@@ -261,7 +261,7 @@ Alternatively (for large datasets) one can use the Entrez-Direct tool: https://w
 
 The following command would download all 12S reference sequences for vertebrates:
 
-`esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields])' | efetch -format gbc > Desktop/vertebrate_sequences.gb`
+`esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields])' | efetch -format gb > Desktop/vertebrate_sequences.gb`
 
 ### My database is missing!
 
