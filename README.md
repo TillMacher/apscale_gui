@@ -339,7 +339,7 @@ Reads are clustered into Operational Taxonomic Units (OTUs), based on a similari
 
 <details><summary> Learn more </summary>
 
-![image](https://user-images.githubusercontent.com/48299746/173068170-07143e8a-b3e7-4de9-867c-5cccca7147e1.png)
+![image](https://user-images.githubusercontent.com/48299746/173072263-847817e4-86c6-4722-99c2-e15ab5124b84.png)
 
 Reads are denoised into Exact Sequence Variants (ESVs). Here, neighbours with small numbers of differences and small abundance compared to X are predicted to be bad reads of X (see [Edgar 2016](https://doi.org/10.1101/081257) for more details). Denoising is an error removal step.
   
@@ -359,7 +359,7 @@ Chimeras are artificial products derived from two biological sequences. They can
 
 <details><summary> Learn more </summary>
 
-Coming soon!
+The LULU filtering algorithm is used to reduce the number of erroneous OTUs in OTU/ESV tables to achieve more realistic biodiversity metrics. More details can be found in [Frøslev et al., 2017](https://www.nature.com/articles/s41467-017-01312-x).
   
 </details>
 
@@ -367,7 +367,7 @@ Coming soon!
 
 <details><summary> Learn more </summary>
 
-![image](https://user-images.githubusercontent.com/48299746/173067396-d118989a-faff-48ab-9cf3-34e64cdac7c1.png)
+![image](https://user-images.githubusercontent.com/48299746/173072350-7e661c26-0bc0-405e-bc93-d2c7fdd83baf.png)
  
 Lastly, OTUs and ESVs are re-mapped to the sequences of each sample and read tables are created.
   
