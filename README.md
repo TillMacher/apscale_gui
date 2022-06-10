@@ -121,6 +121,7 @@ In this case a new, blank project folder was created.
 APSCALE is organized in projects with the following structure:
 
 <pre>
+
 /YOUR_PROJECT_PATH/My_new_project/
 ├───1_raw data
 │   └───data
@@ -149,7 +150,7 @@ APSCALE is organized in projects with the following structure:
 </pre>
 
 ### Input data
-APSCALE expects *demultiplexed .fastq.gz files* in the 2_demultiplexing/data folder.
+APSCALE expects *demultiplexed .fastq.gz files* in the 2_demultiplexing/data folder (see above).
 
 If you prefer to have your data all in one place you can copy the raw data into 1_raw_data/data. However, demultiplexing won't be handled by APSCALE directly, but the GUI version has a demultiplexing tool implemented (see https://github.com/DominikBuchner/demultiplexer).
 
@@ -179,8 +180,241 @@ To run APSCALE, simply select the steps to perform, click on 'Run analysis' and 
 
 ### Output
 
-APSCALE will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
-BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
+APSCALE will create following output files (that are relevant for downstream analyses):
+- Lulu-filtered OTU table (.xlsx and .snappy)
+- Lulu-filtered OTU sequences (.fasta)
+- Lulu-filtered ESV table (.xlsx and .snappy)
+- Lulu-filtered ESV sequences (.fasta)
+
+These files can be used for taxonomic assignment. For example, for COI sequences, BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
+
+<details><summary> Click here to an exemplary APSCALE project </summary>
+
+<pre>
+/YOUR_PROJECT_PATH/My_new_project/
+├───1_raw data
+│   └───data
+│       ├───raw_data_R1.fastq.gz
+│       └───raw_data_R2.fastq.gz
+├───2_demultiplexing
+│   └───data
+│       ├───SAMPLE_1_a_R1.fastq.gz
+│       ├───SAMPLE_1_a_R2.fastq.gz
+│       ├───SAMPLE_1_b_R1.fastq.gz
+│       ├───SAMPLE_1_b_R2.fastq.gz
+│       ├───SAMPLE_2_a_R1.fastq.gz
+│       ├───SAMPLE_2_a_R2.fastq.gz
+│       ├───SAMPLE_2_b_R1.fastq.gz
+│       ├───SAMPLE_2_b_R2.fastq.gz
+│       └───...
+├───3_PE_merging
+│   └───data
+│       ├───SAMPLE_1_a_PE.fastq.gz
+│       ├───SAMPLE_1_b_PE.fastq.gz
+│       ├───SAMPLE_2_a_PE.fastq.gz
+│       ├───SAMPLE_2_b_PE.fastq.gz
+│       └───...
+├───4_primer_trimming
+│   └───data
+│       ├───SAMPLE_1_a_PE_trimmed.fastq.gz
+│       ├───SAMPLE_1_b_PE_trimmed.fastq.gz
+│       ├───SAMPLE_2_a_PE_trimmed.fastq.gz
+│       ├───SAMPLE_2_b_PE_trimmed.fastq.gz
+│       └───...
+├───5_quality_filtering
+│   └───data
+│       ├───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
+│       ├───SAMPLE_1_b_PE_trimmed_filtered.fastq.gz
+│       ├───SAMPLE_2_a_PE_trimmed_filtered.fastq.gz
+│       ├───SAMPLE_2_b_PE_trimmed_filtered.fastq.gz
+│       └───...
+├───6_dereplication_pooling
+│   └───data
+│       ├───dereplication
+│       │   ├───SAMPLE_1_a_PE_trimmed_filtered_dereplicated.fastq.gz
+│       │   ├───SAMPLE_1_b_PE_trimmed_filtered_dereplicated.fastq.gz
+│       │   ├───SAMPLE_2_a_PE_trimmed_filtered_dereplicated.fastq.gz
+│       │   ├───SAMPLE_2_b_PE_trimmed_filtered_dereplicated.fastq.gz
+│       │   └───...
+│       └───pooling
+│           ├───pooled_sequences_dereplicated.fasta.gz
+│           └───pooled_sequences.fasta.gz
+├───7_otu_clustering
+│   └───data
+│   ├───tutorial_apscale_OTU_table.parquet.snappy
+│   ├───tutorial_apscale_OTU_table.xlsx
+│   └───tutorial_apscale_OTUs.fasta
+├───8_denoising
+│   └───data
+│   ├───tutorial_apscale_ESV_table.parquet.snappy
+│   ├───tutorial_apscale_ESV_table.xlsx
+│   └───tutorial_apscale_ESVs.fasta
+└───9_lulu_filtering
+    ├───denoising
+    │   └───data
+    │   ├───tutorial_apscale_ESV_table_filtered.parquet.snappy
+    │   ├───tutorial_apscale_ESV_table_filtered.xlsx
+    │   └───tutorial_apscale_ESVs_filtered.fasta
+    └───otu_clustering    
+        └───data
+        ├───tutorial_apscale_OTU_table_filtered.parquet.snappy
+        ├───tutorial_apscale_OTU_table_filtered.xlsx
+        └───tutorial_apscale_OTUs_filtered.fasta
+
+</pre>
+
+</details>
+
+## APSCALE modules
+
+### Demultiplexing
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173058747-e1589d38-7a7c-493d-8f87-427b18475378.png)
+
+Raw reads are demultiplexed into individual files, based on indiced and/or tags (see [Bohmann et al., 2022](https://doi.org/10.1111/1755-0998.13512) for an overview)
+  
+</details>
+
+### Paired-end merging
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173062975-18f7f8d6-b2fb-4ec7-9ab1-72597b620770.png)
+
+Paired-end reads are merged into a single read.
+  
+</details>
+
+### Primer trimming
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173063025-72ed4de0-d3f4-4a99-b7a0-22f3f10c4d2c.png)
+  
+Adapter or primer sequences are removed from each read.
+  
+</details>
+  
+### Quality & length filtering
+
+<details><summary> Learn more </summary>
+ 
+![image](https://user-images.githubusercontent.com/48299746/173065000-86700cf8-8f79-45f3-8d68-2e3e15b113dd.png)
+
+Reads are filtered according to the expected length of the target fragment. Usually a certain threshold around the expected length is applied (e.g., +-10 of the target fragment length).
+  
+![image](https://user-images.githubusercontent.com/48299746/173064244-f70439ee-3cd2-4646-b290-d648c231ccb4.png)
+
+Additionally reads are filtered by quality. APSCALE uses the 'maximum expected error' value for quality filtering, which is calculated based on Phred quality score. You can learn more about quality filtering in the [usearch documentation](https://www.drive5.com/usearch/manual/exp_errs.html).
+  
+</details>
+
+### Dereplication & pooling
+
+<details><summary> Learn more </summary>
+  
+![image](https://user-images.githubusercontent.com/48299746/173064538-293c9661-f239-4620-8735-9035fe091682.png)
+
+Initially, reads are dereplicated per sample. Only reads with an abundance of at least 4 (default value) are kept.
+  
+![image](https://user-images.githubusercontent.com/48299746/173064752-082721fb-5afb-423c-af48-6ab9578e684d.png)
+
+Then, reads are pooled into a single file and globally dereplicated. The pooled and dereplicated reads are used for clustering and denoising.
+  
+</details>
+
+### OTU clustering
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173063360-7e624d90-bc6e-4ca8-aa62-60bc931e83ef.png)
+  
+Reads are clustered into Operational Taxonomic Units (OTUs), based on a similarity threshold (e.g., 97% similarity).
+  
+</details>
+
+### Denoising (ESVs)
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173068170-07143e8a-b3e7-4de9-867c-5cccca7147e1.png)
+
+Reads are denoised into Exact Sequence Variants (ESVs). Here, neighbours with small numbers of differences and small abundance compared to X are predicted to be bad reads of X (see [Edgar 2016](https://doi.org/10.1101/081257) for more details). Denoising is an error removal step.
+  
+</details>
+
+### Chimera removal (both for OTUs and ESVs)
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173065405-45ad9244-6cbb-4906-9f96-a33626b42cfd.png)
+
+Chimeras are artificial products derived from two biological sequences. They can occur through incomplete extension during PCR. You can learn more about chimeras in the [usearch documentation](https://drive5.com/usearch/manual/chimeras.html). Chimeras are removed from the OTUs and ESVs.
+  
+</details>
+
+### LULU filtering
+
+<details><summary> Learn more </summary>
+
+Coming soon!
+  
+</details>
+
+### Re-mapping
+
+<details><summary> Learn more </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173067396-d118989a-faff-48ab-9cf3-34e64cdac7c1.png)
+ 
+Lastly, OTUs and ESVs are re-mapped to the sequences of each sample and read tables are created.
+  
+</details>
+
+
+## Summary statistics
+
+APSCALE will write all relevant statistics for each module to a project report file. In the ASPCALE-GUI version one can additionally calculate many relevant statistics for the processed dataset. All plots are stored as .pdf and interactive .html charts.
+
+You can check out some examples below:
+
+<details><summary> Boxplot of reads per sample for each module</summary>
+
+![newplot (5)](https://user-images.githubusercontent.com/48299746/173040665-b15f9d71-e10a-4615-a9cc-7a4a03661f16.png)
+
+</details>
+
+<details><summary> Summary of reads per sample for each module (excel table)</summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173041399-57aba00c-dd0f-433e-a0e2-9916e4aeeadc.png)
+
+</details>
+
+<details><summary> OTU summary (all samples)</summary>
+
+![newplot (2)](https://user-images.githubusercontent.com/48299746/173040814-48724104-8448-4877-962f-bfc5a5cf525f.png)
+
+</details>
+
+<details><summary> OTU summary (negative controls)</summary>
+
+![newplot (3)](https://user-images.githubusercontent.com/48299746/173040993-7e3668c4-74de-4828-85c3-437d91841fed.png)
+
+</details>
+
+<details><summary> OTU summary (sample 1 consisting of 4 extraktion replicates with each 2 PCR replicates)</summary>
+
+![newplot (4)](https://user-images.githubusercontent.com/48299746/173040942-36a3ae48-3c3c-4dbb-a7dd-5c1076c0df26.png)
+
+</details>
+
+<details><summary> OTU heatmap (all samples; log of reads) </summary>
+
+![newplot (6)](https://user-images.githubusercontent.com/48299746/173051725-b3756ed0-34b8-4756-84ac-679dda9a1c66.png)
+
+</details>
 
 ## Local BLAST
 
@@ -203,27 +437,29 @@ The local BLAST tool is really simple to use.
 
 The following exemplary BLAST results...
 
-| ID  | Hit  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity | E-Value |
+| ID  | Hit  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity (%) | E-Value |
 | -----  | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- | ----- |
-| OTU_1  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 3.43e-59 |
-| OTU_1  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 100 | 3.43e-59 |
-| OTU_2  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
-| OTU_2  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
-| OTU_3  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 1.05e-46 |
-| OTU_3  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 99 | 9.27e-16 |
-| OTU_3  | Hit_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Barbus | Barbus barbus  | 98 | 1.68e-12 |
+| OTU_1  | Hit_1  |  Chordata | Actinopteri  | Esociformes   | Esocidae     | Esox | Esox lucius  | 100 | 3.33e-68 |
+| OTU_1  | Hit_2  |  Chordata | Actinopteri  | Esociformes   | Esocidae     | Esox | Esox lucius  | 100 | 3.33e-68 |
+| OTU_2  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 3.43e-59 |
+| OTU_2  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 100 | 3.43e-59 |
+| OTU_3  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
+| OTU_3  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
+| OTU_4  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 1.05e-46 |
+| OTU_4  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 99 | 9.27e-16 |
+| OTU_4  | Hit_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Barbus | Barbus barbus  | 98 | 1.68e-12 |
 
 ... would be filtered into a taxonomy table like this:
 
-| ID  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity |
+| ID  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity (%) |
 | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- |
-| OTU_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  |  |  | 100 |
-| OTU_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | | 95 |
-| OTU_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
+| OTU_1  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 |
+| OTU_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  |  |  | 100 |
+| OTU_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | | 95 |
+| OTU_4  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
 
 
 ## Available databases for local BLAST
-
 
 ### Diat.barcode database
 Available from here: https://www6.inrae.fr/carrtel-collection_eng/Barcoding-database/Database-download
@@ -259,9 +495,9 @@ Then download the .gb file!
 
 Alternatively (for large datasets) one can use the Entrez-Direct tool: https://www.ncbi.nlm.nih.gov/books/NBK179288/
 
-The following command would download all 12S reference sequences for vertebrates:
+The following command will download all 12S reference sequences for vertebrates:
 
-`esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields])' | efetch -format gbc > Desktop/vertebrate_sequences.gb`
+`esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields])' | efetch -format gb > Desktop/vertebrate_sequences.gb`
 
 ### My database is missing!
 
