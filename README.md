@@ -264,7 +264,48 @@ These files can be used for taxonomic assignment. For example, for COI sequences
 </pre>
 
 </details>
-  
+
+## APSCALE modules
+
+### Demultiplexing
+
+<details><summary> OTU heatmap (all samples; log of reads) </summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173058747-e1589d38-7a7c-493d-8f87-427b18475378.png)
+
+</details>
+
+### PE merging
+
+<details><summary> OTU heatmap (all samples; log of reads) </summary>
+
+![newplot (6)](https://user-images.githubusercontent.com/48299746/173051725-b3756ed0-34b8-4756-84ac-679dda9a1c66.png)
+
+</details>
+
+### Primer trimming
+
+text
+
+### Quality filtering
+
+text
+
+### Dereplication & pooling
+
+text
+
+### OTU_clustering
+
+text
+
+### Denoising (ESVs)
+
+text
+
+### LULU filtering
+
+text
 
 ## Summary statistics
 
@@ -331,21 +372,24 @@ The following exemplary BLAST results...
 
 | ID  | Hit  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity | E-Value |
 | -----  | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- | ----- |
-| OTU_1  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 3.43e-59 |
-| OTU_1  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 100 | 3.43e-59 |
-| OTU_2  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
-| OTU_2  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
-| OTU_3  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 1.05e-46 |
-| OTU_3  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 99 | 9.27e-16 |
-| OTU_3  | Hit_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Barbus | Barbus barbus  | 98 | 1.68e-12 |
+| OTU_1  | Hit_1  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 | 3.33e-68 |
+| OTU_1  | Hit_2  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 | 3.33e-68 |
+| OTU_2  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 3.43e-59 |
+| OTU_2  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 100 | 3.43e-59 |
+| OTU_3  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
+| OTU_3  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
+| OTU_4  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 1.05e-46 |
+| OTU_4  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 99 | 9.27e-16 |
+| OTU_4  | Hit_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Barbus | Barbus barbus  | 98 | 1.68e-12 |
 
 ... would be filtered into a taxonomy table like this:
 
 | ID  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity |
 | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- |
-| OTU_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  |  |  | 100 |
-| OTU_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | | 95 |
-| OTU_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
+| OTU_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
+| OTU_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  |  |  | 100 |
+| OTU_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | | 95 |
+| OTU_4  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
 
 
 ## Available databases for local BLAST
