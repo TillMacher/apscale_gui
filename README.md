@@ -182,6 +182,42 @@ To run APSCALE, simply select the steps to perform, click on 'Run analysis' and 
 APSCALE will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
 BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
 
+## Summary statistics
+
+APSCALE will write all relevant statistics for each module to a project report file. In the ASPCALE-GUI version one can additionally calculate many relevant statistics for the processed dataset. All plots are stored as .pdf and interactive .html charts.
+
+You can check out some examples below:
+
+<details><summary>Boxplot</summary>
+
+![newplot (5)](https://user-images.githubusercontent.com/48299746/173040665-b15f9d71-e10a-4615-a9cc-7a4a03661f16.png)
+
+</details>
+
+<details><summary>OTU summary (all)</summary>
+
+![newplot (2)](https://user-images.githubusercontent.com/48299746/173040814-48724104-8448-4877-962f-bfc5a5cf525f.png)
+
+</details>
+
+<details><summary>OTU summary (negative controls)</summary>
+
+![newplot (3)](https://user-images.githubusercontent.com/48299746/173040993-7e3668c4-74de-4828-85c3-437d91841fed.png)
+
+</details>
+
+<details><summary>OTU summary (sample 1)</summary>
+
+![newplot (4)](https://user-images.githubusercontent.com/48299746/173040942-36a3ae48-3c3c-4dbb-a7dd-5c1076c0df26.png)
+
+</details>
+
+<details><summary>OTU summary (excel table)</summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173041399-57aba00c-dd0f-433e-a0e2-9916e4aeeadc.png)
+
+</details>
+
 ## Local BLAST
 
 The local BLAST tool is really simple to use.
@@ -223,7 +259,6 @@ The following exemplary BLAST results...
 
 
 ## Available databases for local BLAST
-
 
 ### Diat.barcode database
 Available from here: https://www6.inrae.fr/carrtel-collection_eng/Barcoding-database/Database-download
