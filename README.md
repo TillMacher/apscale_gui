@@ -206,7 +206,7 @@ You can check out some examples below:
 
 </details>
 
-<details><summary>OTU summary (sample 1)</summary>
+<details><summary>OTU summary (sample 1, 4 extraktion replicates with each 2 PCR replicates)</summary>
 
 ![newplot (4)](https://user-images.githubusercontent.com/48299746/173040942-36a3ae48-3c3c-4dbb-a7dd-5c1076c0df26.png)
 
