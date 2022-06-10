@@ -359,7 +359,7 @@ Chimeras are artificial products derived from two biological sequences. They can
 
 <details><summary> Learn more </summary>
 
-The LULU filtering algorithm is used to reduce the number of erroneous OTUs in OTU/ESV tables to achieve more realistic biodiversity metrics. More details can be found in [Frøslev et al., 2017](https://www.nature.com/articles/s41467-017-01312-x).
+The LULU filtering algorithm is used to reduce the number of erroneous OTUs/ESVs to achieve more realistic biodiversity metrics. More details can be found in [Frøslev et al., 2017](https://www.nature.com/articles/s41467-017-01312-x).
   
 </details>
 
