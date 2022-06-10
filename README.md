@@ -121,6 +121,7 @@ In this case a new, blank project folder was created.
 APSCALE is organized in projects with the following structure:
 
 <pre>
+
 /YOUR_PROJECT_PATH/My_new_project/
 ├───1_raw data
 │   └───data
@@ -149,7 +150,7 @@ APSCALE is organized in projects with the following structure:
 </pre>
 
 ### Input data
-APSCALE expects *demultiplexed .fastq.gz files* in the 2_demultiplexing/data folder.
+APSCALE expects *demultiplexed .fastq.gz files* in the 2_demultiplexing/data folder (see above).
 
 If you prefer to have your data all in one place you can copy the raw data into 1_raw_data/data. However, demultiplexing won't be handled by APSCALE directly, but the GUI version has a demultiplexing tool implemented (see https://github.com/DominikBuchner/demultiplexer).
 
@@ -182,39 +183,127 @@ To run APSCALE, simply select the steps to perform, click on 'Run analysis' and 
 APSCALE will output an OTU table and an ESV table, as well as two .fasta files, which can be used for taxnomic assignment. For example, for COI sequences,
 BOLDigger (https://github.com/DominikBuchner/BOLDigger) can be used directly with the output of APSCALE to assign taxomoy to the OTUs / ESVs using the Barcode of Life Data system (BOLD) database. Furthermore, the ESV and OTU tables are compatible with TaxonTableTools (https://github.com/TillMacher/TaxonTableTools), which can be used for DNA metabarcoding specific analyses.
 
+Following files will be created:
+
+<details><summary> Exemplary APSCALE project </summary>
+
+<pre>
+/YOUR_PROJECT_PATH/My_new_project/
+├───1_raw data
+│   └───data
+│       ├───raw_data_R1.fastq.gz
+│       └───raw_data_R2.fastq.gz
+├───2_demultiplexing
+│   └───data
+│       ├───SAMPLE_1_a_R1.fastq.gz
+│       ├───SAMPLE_1_a_R2.fastq.gz
+│       ├───SAMPLE_1_b_R1.fastq.gz
+│       ├───SAMPLE_1_b_R2.fastq.gz
+│       ├───SAMPLE_2_a_R1.fastq.gz
+│       ├───SAMPLE_2_a_R2.fastq.gz
+│       ├───SAMPLE_2_b_R1.fastq.gz
+│       ├───SAMPLE_2_b_R2.fastq.gz
+│       └───...
+├───3_PE_merging
+│   └───data
+│       ├───SAMPLE_1_a_PE.fastq.gz
+│       ├───SAMPLE_1_b_PE.fastq.gz
+│       ├───SAMPLE_2_a_PE.fastq.gz
+│       ├───SAMPLE_2_b_PE.fastq.gz
+│       └───...
+├───4_primer_trimming
+│   └───data
+│       ├───SAMPLE_1_a_PE_trimmed.fastq.gz
+│       ├───SAMPLE_1_b_PE_trimmed.fastq.gz
+│       ├───SAMPLE_2_a_PE_trimmed.fastq.gz
+│       ├───SAMPLE_2_b_PE_trimmed.fastq.gz
+│       └───...
+├───5_quality_filtering
+│   └───data
+│       ├───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
+│       ├───SAMPLE_1_b_PE_trimmed_filtered.fastq.gz
+│       ├───SAMPLE_2_a_PE_trimmed_filtered.fastq.gz
+│       ├───SAMPLE_2_b_PE_trimmed_filtered.fastq.gz
+│       └───...
+├───6_dereplication_pooling
+│   └───data
+│       ├───dereplication
+│       │   ├───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
+│       │   ├───SAMPLE_1_b_PE_trimmed_filtered.fastq.gz
+│       │   ├───SAMPLE_2_a_PE_trimmed_filtered.fastq.gz
+│       │   ├───SAMPLE_2_b_PE_trimmed_filtered.fastq.gz
+│       │   └───...
+│       └───pooling
+│           ├───pooled_sequences_dereplicated.fasta.gz
+│           └───pooled_sequences.fasta.gz
+├───7_otu_clustering
+│   └───data
+│   │   └───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
+│   ├───tutorial_apscale_OTU_table.parquet.snappy
+│   ├───tutorial_apscale_OTU_table.xlsx
+│   └───tutorial_apscale_OTUs.fasta
+├───8_denoising
+│   └───data
+│   │   └───SAMPLE_1_a_PE_trimmed_filtered.fastq.gz
+│   ├───tutorial_apscale_ESV_table.parquet.snappy
+│   ├───tutorial_apscale_ESV_table.xlsx
+│   └───tutorial_apscale_ESVs.fasta
+└───9_lulu_filtering
+    ├───denoising
+    │   └───data
+    │   ├───tutorial_apscale_ESV_table_filtered.parquet.snappy
+    │   ├───tutorial_apscale_ESV_table_filtered.xlsx
+    │   └───tutorial_apscale_ESVs_filtered.fasta
+    └───otu_clustering    
+        └───data
+        ├───tutorial_apscale_OTU_table_filtered.parquet.snappy
+        ├───tutorial_apscale_OTU_table_filtered.xlsx
+        └───tutorial_apscale_OTUs_filtered.fasta
+
+</pre>
+
+</details>
+  
+
 ## Summary statistics
 
 APSCALE will write all relevant statistics for each module to a project report file. In the ASPCALE-GUI version one can additionally calculate many relevant statistics for the processed dataset. All plots are stored as .pdf and interactive .html charts.
 
 You can check out some examples below:
 
-<details><summary>Boxplot</summary>
+<details><summary> Boxplot of reads per sample for each module</summary>
 
 ![newplot (5)](https://user-images.githubusercontent.com/48299746/173040665-b15f9d71-e10a-4615-a9cc-7a4a03661f16.png)
 
 </details>
 
-<details><summary>OTU summary (all)</summary>
+<details><summary> Summary of reads per sample for each module (excel table)</summary>
+
+![image](https://user-images.githubusercontent.com/48299746/173041399-57aba00c-dd0f-433e-a0e2-9916e4aeeadc.png)
+
+</details>
+
+<details><summary> OTU summary (all samples)</summary>
 
 ![newplot (2)](https://user-images.githubusercontent.com/48299746/173040814-48724104-8448-4877-962f-bfc5a5cf525f.png)
 
 </details>
 
-<details><summary>OTU summary (negative controls)</summary>
+<details><summary> OTU summary (negative controls)</summary>
 
 ![newplot (3)](https://user-images.githubusercontent.com/48299746/173040993-7e3668c4-74de-4828-85c3-437d91841fed.png)
 
 </details>
 
-<details><summary>OTU summary (sample 1, 4 extraktion replicates with each 2 PCR replicates)</summary>
+<details><summary> OTU summary (sample 1 consisting of 4 extraktion replicates with each 2 PCR replicates)</summary>
 
 ![newplot (4)](https://user-images.githubusercontent.com/48299746/173040942-36a3ae48-3c3c-4dbb-a7dd-5c1076c0df26.png)
 
 </details>
 
-<details><summary>OTU summary (excel table)</summary>
+<details><summary> OTU heatmap (all samples; log of reads) </summary>
 
-![image](https://user-images.githubusercontent.com/48299746/173041399-57aba00c-dd0f-433e-a0e2-9916e4aeeadc.png)
+![newplot (6)](https://user-images.githubusercontent.com/48299746/173051725-b3756ed0-34b8-4756-84ac-679dda9a1c66.png)
 
 </details>
 
