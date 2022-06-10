@@ -259,7 +259,7 @@ Then download the .gb file!
 
 Alternatively (for large datasets) one can use the Entrez-Direct tool: https://www.ncbi.nlm.nih.gov/books/NBK179288/
 
-The following command would download all 12S reference sequences for vertebrates:
+The following command will download all 12S reference sequences for vertebrates:
 
 `esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields])' | efetch -format gb > Desktop/vertebrate_sequences.gb`
 
