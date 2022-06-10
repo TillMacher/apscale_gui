@@ -439,8 +439,8 @@ The following exemplary BLAST results...
 
 | ID  | Hit  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity (%) | E-Value |
 | -----  | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- | ----- |
-| OTU_1  | Hit_1  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 | 3.33e-68 |
-| OTU_1  | Hit_2  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 | 3.33e-68 |
+| OTU_1  | Hit_1  |  Chordata | Actinopteri  | Esociformes   | Esocidae     | Esox | Esox lucius  | 100 | 3.33e-68 |
+| OTU_1  | Hit_2  |  Chordata | Actinopteri  | Esociformes   | Esocidae     | Esox | Esox lucius  | 100 | 3.33e-68 |
 | OTU_2  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 | 3.43e-59 |
 | OTU_2  | Hit_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Squalius | Squalius cephalus  | 100 | 3.43e-59 |
 | OTU_3  | Hit_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | Rutilus rutilus | 95 | 4.77e-35 |
@@ -453,7 +453,7 @@ The following exemplary BLAST results...
 
 | ID  | Phylum | Class  | Order | Family  | Genus | Species  | Similarity (%) |
 | -----  | ----- | -----  | ----- | -----  | ----- | -----  | ----- |
-| OTU_1  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
+| OTU_1  |  Chordata | Actinopteri  | Esociformes | Esocidae  | Esox | Esox lucius  | 100 |
 | OTU_2  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  |  |  | 100 |
 | OTU_3  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Rutilus | | 95 |
 | OTU_4  |  Chordata | Actinopteri  | Cypriniformes | Leuciscidae  | Leuciscus | Leuciscus aspius  | 100 |
