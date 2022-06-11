@@ -510,7 +510,7 @@ The following command will download all 12S reference sequences for vertebrates:
 
 Just let us know if there is need for further databases and we will try to add them.
 
-### Citation
+## Citation
 
 For now APSCALE-GUI can be cited with this Github page. A publication is coming soon.
 
