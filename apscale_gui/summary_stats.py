@@ -105,7 +105,8 @@ def plot_reads(Project_report, project, ESV_table_lulu, OTU_table_lulu):
         y_values = df_stats.loc[sample].values.tolist()[:-1]
         x_values = df_stats.columns.tolist()[:-1]
         fig.add_trace(go.Scatter(x=x_values, marker_color='navy', y=y_values, name=sample))
-        fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per sample for each module')
+    fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per sample for each module')
+    fig.update_yaxes(title='Reads')
     out_html = Path(project).joinpath('0_statistics', 'Summary_statistics/{}_scatter.html'.format('OTUs'))
     fig.write_html(str(out_html))
 
@@ -115,7 +116,8 @@ def plot_reads(Project_report, project, ESV_table_lulu, OTU_table_lulu):
         y_values = df_stats.loc[sample].values.tolist()[:-2] + [df_stats.loc[sample].values.tolist()[-1]]
         x_values = df_stats.columns.tolist()[:-2] + [df_stats.columns.tolist()[-1]]
         fig.add_trace(go.Scatter(x=x_values, marker_color='navy', y=y_values, name=sample))
-        fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per sample for each module')
+    fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per sample for each module')
+    fig.update_yaxes(title='Reads')
     out_html = Path(project).joinpath('0_statistics', 'Summary_statistics/{}_scatter.html'.format('ESVs'))
     fig.write_html(str(out_html))
 
@@ -125,9 +127,26 @@ def plot_reads(Project_report, project, ESV_table_lulu, OTU_table_lulu):
         y_values = df_stats.loc[samples][category].values.tolist()
         fig.add_trace(go.Box(y=y_values, name=category, marker_color = 'navy'))
     fig.update_layout(template='simple_white', width=1000, height=800, title='Reads per module')
+    fig.update_yaxes(title='Reads')
     out_html = Path(project).joinpath('0_statistics', 'Summary_statistics/boxplot.html')
     fig.write_html(str(out_html))
 
+def lulu_stats(ESV_table, OTU_table, ESV_table_lulu, OTU_table_lulu):
+    ESVs = len(pd.read_excel(ESV_table))
+    ESVs_filtered = len(pd.read_excel(ESV_table_lulu))
+    OTUs = len(pd.read_excel(OTU_table))
+    OTUs_filtered = len(pd.read_excel(OTU_table_lulu))
+
+    fig = go.Figure()
+    x_values = ['ESVs', 'ESVs filtered', 'OTUs', 'OTUs filtered']
+    y_values = [ESVs, ESVs_filtered, OTUs, OTUs_filtered]
+    text = [ESVs, ESVs_filtered, OTUs, OTUs_filtered]
+    fig.add_trace(go.Bar(x=x_values, y=y_values, marker_color='navy', text=text))
+    fig.update_layout(template='simple_white', width=1000, height=800, title='LULU filtering')
+    fig.update_traces(textposition='outside')
+    fig.update_yaxes(title='OTUs/ESVs')
+    out_html = Path(project).joinpath('0_statistics', 'Summary_statistics/LULU_filtering_stats.html')
+    fig.write_html(str(out_html))
 
 ## main function to call the script
 def main(project = Path.cwd()):
@@ -150,6 +169,8 @@ def main(project = Path.cwd()):
 
     ## collect required files
     Project_report = Path(project).joinpath('Project_report.xlsx')
+    OTU_table = Path(project).joinpath('7_otu_clustering/', project_name + '_OTU_table.xlsx')
+    ESV_table = Path(project).joinpath('8_denoising/', project_name + '_ESV_table.xlsx')
     OTU_table_lulu = Path(project).joinpath('9_lulu_filtering/otu_clustering', project_name + '_OTU_table_filtered.xlsx')
     ESV_table_lulu = Path(project).joinpath('9_lulu_filtering/denoising', project_name + '_ESV_table_filtered.xlsx')
 
