@@ -33,7 +33,7 @@ from lastversion import lastversion
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.1.4'
+apscale_version = '1.1.5'
 
 ## check for the latest version of TTT
 try:
@@ -132,7 +132,7 @@ def main():
     ncbi_blast_png = Path(pkg_resources.resource_filename(__name__, '/_source/ncbi_blast.png'))
     boldigger_png = Path(pkg_resources.resource_filename(__name__, '/_source/boldigger.png'))
     summary_statistics_png = Path(pkg_resources.resource_filename(__name__, '/_source/summary_statistics.png'))
-    log_file_png = Path(pkg_resources.resource_filename(__name__, '/_source/log_file.png'))
+    export_results_png = Path(pkg_resources.resource_filename(__name__, '/_source/export_results.png'))
 
     ## open user_data_txt to save the standard output put
     f = open(user_data_txt)
@@ -281,7 +281,7 @@ def main():
                         # row 3
                         [sg.Button(key='open_boldigger', button_color=('white', 'white'), image_filename=boldigger_png),
                         sg.Button(key='open_analysis_statistics', button_color=('white', 'white'), image_filename=summary_statistics_png),
-                        sg.Button(key='open_compress_results', button_color=('white', 'white'), image_filename=log_file_png)],
+                        sg.Button(key='open_compress_results', button_color=('white', 'white'), image_filename=export_results_png)],
                         ]
 
     ## define variables for the main window
