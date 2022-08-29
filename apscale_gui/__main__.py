@@ -27,12 +27,13 @@ from apscale_gui.settings_file import apply_settings
 from apscale_gui.settings_file import settings_integrity
 from apscale_gui.rename_files import create_rename_sheet
 from apscale_gui.rename_files import rename_files
+from apscale_gui.export_results import export_results
 from lastversion import lastversion
 
 ##########################################################################################################################
 # update version here (will be displayed on the main layout)
 # Support for: u = ubuntu, w = windows, m = macintosh
-apscale_version = '1.1.2'
+apscale_version = '1.1.4'
 
 ## check for the latest version of TTT
 try:
@@ -280,7 +281,7 @@ def main():
                         # row 3
                         [sg.Button(key='open_boldigger', button_color=('white', 'white'), image_filename=boldigger_png),
                         sg.Button(key='open_analysis_statistics', button_color=('white', 'white'), image_filename=summary_statistics_png),
-                        sg.Button(key='open_log_file', button_color=('white', 'white'), image_filename=log_file_png)],
+                        sg.Button(key='open_compress_results', button_color=('white', 'white'), image_filename=log_file_png)],
                         ]
 
     ## define variables for the main window
@@ -333,11 +334,11 @@ def main():
                 except Exception:
                     sg.PopupError('You have to install BOLDigger first!')
 
-            if event == 'open_log_file':
+            if event == 'open_compress_results':
                 MP_window.hide()
-                answer = sg.PopupOKCancel('Open log file?', title='Log file')
+                answer = sg.PopupOKCancel('Export and compress results?', title='Log file')
                 if answer == 'OK':
-                    open_file(Path(str(path_to_outdirs) + '/Project_report.xlsx'))
+                    export_results(path_to_outdirs)
                 MP_window.UnHide()
 
             if event == 'open_run_analyses':
@@ -550,7 +551,7 @@ def main():
                 					[sg.Text('NCBI BLAST', size=(50,1), font=('Arial', 12, 'bold'))],
                 					[sg.Text('_'*115)],
                                     [sg.Frame(layout=[
-                                    [sg.Text('1. BLAST your OTU or ESV fasta file against the NCBI database:'), sg.Button('NCBI blast website')],
+                                    [sg.Text('1. BLAST your OTU or ESV fasta file against the NCBI database:'), sg.Button('NCBI blast website', key='open_ncbi_website')],
                                     [sg.Text('2. When results are available, click on \'Download all\' and select the \'Single-file XML2\' format.')],
                                     [sg.Text('3. Store the xml2 file in the \'9_NCBI_BLAST/xml2_files\' folder.')]
                                     ], title='BLAST search')],
@@ -608,6 +609,9 @@ def main():
                             print('')
                             blast_xml_to_taxonomy(fasta_file, xml_files, read_table, limit)
                             print('')
+
+                    if event == 'open_ncbi_website':
+                        webbrowser.open('https://blast.ncbi.nlm.nih.gov/Blast.cgi?PROGRAM=blastn&PAGE_TYPE=BlastSearch&LINK_LOC=blasthome')
 
                 blast_window.Close()
 
@@ -720,10 +724,12 @@ def main():
                                     [sg.Text('')],
                                     [sg.Text('3. Select BLAST results (.csv)', size=(25,1)), sg.Input('', size=(10,1)), sg.FileBrowse(key='blast_csv', initial_folder = Path(path_to_outdirs).joinpath('10_local_BLAST'))],
                                     [sg.Text('4. Filter BLAST results', size=(25,1)), sg.Button('Go!', key='run_blast_filter'), sg.Text('Select taxonomy source:'), sg.Combo(reference_databases, default_value=reference_databases[0], key='database_taxonomy_source')],
-                                    [sg.Text('Species >='), sg.Spin([i for i in range(1,101)], initial_value=98, key='threshold_species'),
+                                    [sg.Text('Similarity threshold (%):'),
+                                    sg.Text('Species >='), sg.Spin([i for i in range(1,101)], initial_value=98, key='threshold_species'),
                                     sg.Text('Genus >='), sg.Spin([i for i in range(1,101)], initial_value=95, key='threshold_genus'),
                                     sg.Text('Family >='), sg.Spin([i for i in range(1,101)], initial_value=90, key='threshold_family'),
                                     sg.Text('Order >='), sg.Spin([i for i in range(1,101)], initial_value=85, key='threshold_order')],
+                                    [sg.Text('E-value threshold:'), sg.Text('E-value >='), sg.Input('0.0005', size=(10,1), key='threshold_e_value')],
                                     [sg.Text('', size=(90,1))],
                                     ], title='Assign taxonomy using BLASTn')],
 
@@ -786,7 +792,7 @@ def main():
 
                                 ## filter blast results
                                 filter_tresholds = [int(values2['threshold_species']), int(values2['threshold_genus']), int(values2['threshold_family']), int(values2['threshold_order'])]
-                                filter_blast_results(values2['blast_csv'], values2['local_blast_read_table'], project_folder, databases_path, filter_tresholds, values2['database_taxonomy_source'])
+                                filter_blast_results(values2['blast_csv'], values2['local_blast_read_table'], project_folder, values2['blast_database'], filter_tresholds, values2['database_taxonomy_source'], float(values2['threshold_e_value']))
 
                                 sg.Popup('Finished filtering BLAST results!', title='Finished')
 

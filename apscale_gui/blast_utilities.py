@@ -1,6 +1,6 @@
 from pathlib import Path
 from Bio import SeqIO
-import datetime, sys, re, subprocess, itertools, os, time, shutil, glob
+import datetime, sys, re, subprocess, itertools, os, time, shutil, glob, pkg_resources
 import pandas as pd
 from ete3 import NCBITaxa
 import requests
@@ -121,236 +121,239 @@ def blast_xml_to_taxonomy(fasta_file, blast_xml_files, read_table, limit):
     ## start script
 
     limit = int(limit)
-    taxonomy_table = str(Path(fasta_file)).replace('.fasta', '_taxonomy_table.xlsx')
+    taxonomy_table = Path(str(Path(fasta_file)).replace('.fasta', '_taxonomy_table.xlsx'))
 
-    with pd.ExcelWriter(taxonomy_table) as writer:
-        hit_list = []
+    writer = pd.ExcelWriter(taxonomy_table, engine='xlsxwriter')
 
-        print(datetime.datetime.now().strftime('%H:%M:%S') + ': Loading result file(s).')
+    hit_list = []
 
-        if type(blast_xml_files) == 'str':
-            blast_xml_files = [blast_xml_files]
+    print(datetime.datetime.now().strftime('%H:%M:%S') + ': Loading result file(s).')
 
-        for results_xml in tqdm(blast_xml_files):
-            ################################################################################
-            # Convert the xml to a hit table
-            f = open(results_xml)
-            for line in f:
-                # collect the query name
-                if '<query-title>' in line:
-                    query = re.split('>|<', line)[2]
-                # collect the taxonomy id
-                if '<taxid>' in line:
-                    taxid = re.split('>|<', line)[2]
-                # calculate the similarity
-                if '<identity>' in line:
-                    identity = re.split('>|<', line)[2]
-                # collect the query sequence length
-                if '<align-len>' in line:
-                    align_len = re.split('>|<', line)[2]
-                    perc_id = round(int(identity) / int(align_len) * 100, 2)
-                    hit_list.append([query, taxid, perc_id, 'NCBI'])
-            f.close()
+    if isinstance(blast_xml_files, str) == True:
+        blast_xml_files = [blast_xml_files]
 
-        print(datetime.datetime.now().strftime('%H:%M:%S') + ': Collecting Taxids from the blast result file(s).')
-
-        ## filter list according to limit set by user
-        hit_list_filtered = []
-        for hit in tqdm(hit_list):
-            ID = hit[0]
-            n_occurences = len([i for i in hit_list_filtered if ID in i])
-            if n_occurences < limit:
-                hit_list_filtered.append(hit)
-
-        hit_table_df = pd.DataFrame(hit_list_filtered, columns=['ID', 'Taxonomy', 'Similarity', 'Status'])
-        hit_table_df.to_excel('writer', sheet_name='Raw hits', index=False)
-
-        print(datetime.datetime.now().strftime('%H:%M:%S') + ': Pre-sorting hits by similarity.')
-
-        query_list = list(set(hit_table_df['ID'].tolist()))
-        sorted_hits_dict = {}
-
-        for query in tqdm(sorted(query_list)):
-            prev_hit = False
-            hit_list = hit_table_df.loc[hit_table_df['ID'] == query][['Taxonomy', 'Similarity']].values.tolist()
-            similar_hit_list = [hit_list[0]]
-
-            if len([list(x) for x in set(tuple(x) for x in hit_list)]) == 1:
-                sorted_hits_dict[query] = similar_hit_list
-
-            else:
-                for hit in hit_list:
-                    if prev_hit == False:
-                        prev_hit = hit
-                    else:
-                        if hit[1] < prev_hit[1]:
-                            sorted_hits_dict[query] = similar_hit_list
-                            break
-                        else:
-                            similar_hit_list.append(hit)
-                        prev_hit = hit
-
-            if query not in sorted_hits_dict.keys():
-                similar_hit_list.sort()
-                similar_hit_list = [list(x) for x in set(tuple(x) for x in similar_hit_list)]
-                sorted_hits_dict[query] = similar_hit_list
-
-        similarity_filtered_list = []
-        for key, values in sorted_hits_dict.items():
-            unique_values = [list(x) for x in set(tuple(x) for x in values)]
-            if len(unique_values) == 1:
-                similarity_filtered_list.append([key] + values[0])
-            else:
-                similarity_filtered_list = similarity_filtered_list + [[key] + value for value in unique_values]
-
-        hit_table_df = pd.DataFrame(similarity_filtered_list, columns=['ID', 'taxid', 'Similarity'])
-
+    for results_xml in tqdm(blast_xml_files):
         ################################################################################
-        # Download the NCBI taxonomy for all hits
+        # Convert the xml to a hit table
+        f = open(results_xml)
+        for line in f:
+            # collect the query name
+            if '<query-title>' in line:
+                query = re.split('>|<', line)[2]
+            # collect the taxonomy id
+            if '<taxid>' in line:
+                taxid = re.split('>|<', line)[2]
+            # calculate the similarity
+            if '<identity>' in line:
+                identity = re.split('>|<', line)[2]
+            # collect the query sequence length
+            if '<align-len>' in line:
+                align_len = re.split('>|<', line)[2]
+                perc_id = round(int(identity) / int(align_len) * 100, 2)
+                hit_list.append([query, taxid, perc_id, 'NCBI'])
+        f.close()
 
-        print(datetime.datetime.now().strftime('%H:%M:%S') + ': Downloading taxonomy from NCBI.')
+    print(datetime.datetime.now().strftime('%H:%M:%S') + ': Collecting Taxids from the blast result file(s).')
 
-        hit_list_2 = []
-        taxid_dict = {}
+    ## filter list according to limit set by user
+    hit_list_filtered = []
+    for hit in tqdm(hit_list):
+        ID = hit[0]
+        n_occurences = len([i for i in hit_list_filtered if ID in i])
+        if n_occurences < limit:
+            hit_list_filtered.append(hit)
 
-        for hit in tqdm(similarity_filtered_list):
-            taxid = hit[1]
+    hit_table_df = pd.DataFrame(hit_list_filtered, columns=['ID', 'Taxonomy', 'Similarity', 'Status'])
+    hit_table_df.to_excel(writer, sheet_name='Raw hits', index=False)
 
-            if taxid in taxid_dict.keys():
-                taxonomy_list = taxid_dict[taxid]
-            else:
-                try:
-                    taxonomy_list = ncbi_taxid_request(hit)
-                    taxid_dict[taxid] = taxonomy_list
-                except ValueError:
-                    taxonomy_list = 'taxid_not_found'
-                    taxid_dict[taxid] = taxonomy_list
+    print(datetime.datetime.now().strftime('%H:%M:%S') + ': Pre-sorting hits by similarity.')
 
-            if taxonomy_list != 'taxid_not_found':
-                hit_list_2.append([hit[0]] + taxonomy_list + [hit[2]] + ['NCBI'])
+    query_list = list(set(hit_table_df['ID'].tolist()))
+    sorted_hits_dict = {}
 
-        ################################################################################
-        ## remove 'uncultured' hits
-        hit_list_2_filtered =[]
-        for hit in hit_list_2:
-            if 'uncultured' in hit[6]:
-                hit[1] = hit[6]
-                hit[6] = ''
-                hit_list_2_filtered.append(hit)
-            else:
-                hit_list_2_filtered.append(hit)
+    for query in tqdm(sorted(query_list)):
+        prev_hit = False
+        hit_list = hit_table_df.loc[hit_table_df['ID'] == query][['Taxonomy', 'Similarity']].values.tolist()
+        similar_hit_list = [hit_list[0]]
 
-        hit_table_2_df = pd.DataFrame(hit_list_2_filtered, columns=['ID','Phylum','Class','Order','Family','Genus','Species', 'Similarity', 'Status'])
-        hit_table_2_df = sort_df(hit_table_2_df)
+        if len([list(x) for x in set(tuple(x) for x in hit_list)]) == 1:
+            sorted_hits_dict[query] = similar_hit_list
 
-        ################################################################################
-        # Filter the table according to the JAMP filtering method
-
-        print(datetime.datetime.now().strftime('%H:%M:%S') + ': Filtering hits by similarity thresholds.')
-
-        hit_list_3 = []
-        for hit in tqdm(hit_list_2_filtered):
-            identity = hit[-2]
-            # remove empty hits first
-            if hit[1] != '':
-                if 100 >= identity >= 98:
-                    if hit[1:7] != ['']*6:
-                        hit_list_3.append(hit)
-                elif 98 >= identity >= 95:
-                    hit[6] = ''
-                    if hit[1:7] != ['']*6:
-                        hit_list_3.append(hit)
-                elif 95 >= identity >= 90:
-                    hit[5], hit[6] = '', ''
-                    if hit[1:7] != ['']*6:
-                        hit_list_3.append(hit)
-                elif 90 >= identity >= 85:
-                    hit[4], hit[5], hit[6] = '', '', ''
-                    if hit[1:7] != ['']*6:
-                        hit_list_3.append(hit)
+        else:
+            for hit in hit_list:
+                if prev_hit == False:
+                    prev_hit = hit
                 else:
-                    hit[3], hit[4], hit[5], hit[6] = '', '', '', ''
-                    if hit[1:7] != ['']*6:
-                        hit_list_3.append(hit)
+                    if hit[1] < prev_hit[1]:
+                        sorted_hits_dict[query] = similar_hit_list
+                        break
+                    else:
+                        similar_hit_list.append(hit)
+                    prev_hit = hit
 
-        hit_list_3 = [list(x) for x in set(tuple(x) for x in hit_list_3)]
+        if query not in sorted_hits_dict.keys():
+            similar_hit_list.sort()
+            similar_hit_list = [list(x) for x in set(tuple(x) for x in similar_hit_list)]
+            sorted_hits_dict[query] = similar_hit_list
 
-        hit_table_3_df = pd.DataFrame(hit_list_3, columns=['ID','Phylum','Class','Order','Family','Genus','Species', 'Similarity', 'Status'])
-        hit_table_3_df = sort_df(hit_table_3_df)
+    similarity_filtered_list = []
+    for key, values in sorted_hits_dict.items():
+        unique_values = [list(x) for x in set(tuple(x) for x in values)]
+        if len(unique_values) == 1:
+            similarity_filtered_list.append([key] + values[0])
+        else:
+            similarity_filtered_list = similarity_filtered_list + [[key] + value for value in unique_values]
 
-        # hit_table_3_df.to_excel(writer, sheet_name='JAMP filtering', index=False)
+    hit_table_df = pd.DataFrame(similarity_filtered_list, columns=['ID', 'taxid', 'Similarity'])
 
-        ################################################################################
-        # Remove remaining duplicates and ambigious taxonomies
+    ################################################################################
+    # Download the NCBI taxonomy for all hits
 
-        print(datetime.datetime.now().strftime('%H:%M:%S') + ': Removing ambigious taxonomy.')
+    print(datetime.datetime.now().strftime('%H:%M:%S') + ': Downloading taxonomy from NCBI.')
 
-        IDs = hit_table_3_df['ID'].values.tolist()
-        duplicates = list(set([x for n, x in enumerate(IDs) if x in IDs[:n]]))
-        duplicates_dict = {}
+    hit_list_2 = []
+    taxid_dict = {}
 
-        for hit in sorted(hit_list_3):
-            if (hit[0] in duplicates and hit[0] not in duplicates_dict.keys()):
-                duplicates_dict[hit[0]] = [hit]
-            elif hit[0] in duplicates:
-                duplicates_dict[hit[0]] = duplicates_dict[hit[0]] + [hit]
+    for hit in tqdm(similarity_filtered_list):
+        taxid = hit[1]
 
-        for key in duplicates_dict.keys():
-            # remove: species
+        if taxid in taxid_dict.keys():
+            taxonomy_list = taxid_dict[taxid]
+        else:
+            try:
+                taxonomy_list = ncbi_taxid_request(hit[1])
+                taxid_dict[taxid] = taxonomy_list
+            except ValueError:
+                taxonomy_list = 'taxid_not_found'
+                taxid_dict[taxid] = taxonomy_list
+
+        if taxonomy_list != 'taxid_not_found':
+            hit_list_2.append([hit[0]] + taxonomy_list + [hit[2]] + ['NCBI'])
+
+    ################################################################################
+    ## remove 'uncultured' hits
+    hit_list_2_filtered =[]
+    for hit in hit_list_2:
+        if 'uncultured' in hit[6]:
+            hit[1] = hit[6]
+            hit[6] = ''
+            hit_list_2_filtered.append(hit)
+        else:
+            hit_list_2_filtered.append(hit)
+
+    hit_table_2_df = pd.DataFrame(hit_list_2_filtered, columns=['ID','Phylum','Class','Order','Family','Genus','Species', 'Similarity', 'Status'])
+    hit_table_2_df = sort_df(hit_table_2_df)
+
+    ################################################################################
+    # Filter the table according to the JAMP filtering method
+
+    print(datetime.datetime.now().strftime('%H:%M:%S') + ': Filtering hits by similarity thresholds.')
+
+    hit_list_3 = []
+    for hit in tqdm(hit_list_2_filtered):
+        identity = hit[-2]
+        # remove empty hits first
+        if hit[1] != '':
+            if 100 >= identity >= 98:
+                if hit[1:7] != ['']*6:
+                    hit_list_3.append(hit)
+            elif 98 >= identity >= 95:
+                hit[6] = ''
+                if hit[1:7] != ['']*6:
+                    hit_list_3.append(hit)
+            elif 95 >= identity >= 90:
+                hit[5], hit[6] = '', ''
+                if hit[1:7] != ['']*6:
+                    hit_list_3.append(hit)
+            elif 90 >= identity >= 85:
+                hit[4], hit[5], hit[6] = '', '', ''
+                if hit[1:7] != ['']*6:
+                    hit_list_3.append(hit)
+            else:
+                hit[3], hit[4], hit[5], hit[6] = '', '', '', ''
+                if hit[1:7] != ['']*6:
+                    hit_list_3.append(hit)
+
+    hit_list_3 = [list(x) for x in set(tuple(x) for x in hit_list_3)]
+
+    hit_table_3_df = pd.DataFrame(hit_list_3, columns=['ID','Phylum','Class','Order','Family','Genus','Species', 'Similarity', 'Status'])
+    hit_table_3_df = sort_df(hit_table_3_df)
+
+    # hit_table_3_df.to_excel(writer, sheet_name='JAMP filtering', index=False)
+
+    ################################################################################
+    # Remove remaining duplicates and ambigious taxonomies
+
+    print(datetime.datetime.now().strftime('%H:%M:%S') + ': Removing ambigious taxonomy.')
+
+    IDs = hit_table_3_df['ID'].values.tolist()
+    duplicates = list(set([x for n, x in enumerate(IDs) if x in IDs[:n]]))
+    duplicates_dict = {}
+
+    for hit in sorted(hit_list_3):
+        if (hit[0] in duplicates and hit[0] not in duplicates_dict.keys()):
+            duplicates_dict[hit[0]] = [hit]
+        elif hit[0] in duplicates:
+            duplicates_dict[hit[0]] = duplicates_dict[hit[0]] + [hit]
+
+    for key in duplicates_dict.keys():
+        # remove: species
+        for entry in duplicates_dict[key]:
+            entry[6] = ''
+        if len([list(x) for x in set(tuple(x) for x in duplicates_dict[key])]) == 1:
+            duplicates_dict[key] = [list(x) for x in set(tuple(x) for x in duplicates_dict[key])][0]
+        else:
+            # remove: genus
             for entry in duplicates_dict[key]:
-                entry[6] = ''
+                entry[5] = ''
             if len([list(x) for x in set(tuple(x) for x in duplicates_dict[key])]) == 1:
                 duplicates_dict[key] = [list(x) for x in set(tuple(x) for x in duplicates_dict[key])][0]
             else:
-                # remove: genus
+                # remove: family
                 for entry in duplicates_dict[key]:
-                    entry[5] = ''
+                    entry[4] = ''
                 if len([list(x) for x in set(tuple(x) for x in duplicates_dict[key])]) == 1:
                     duplicates_dict[key] = [list(x) for x in set(tuple(x) for x in duplicates_dict[key])][0]
                 else:
-                    # remove: family
+                    # remove: order
                     for entry in duplicates_dict[key]:
-                        entry[4] = ''
+                        entry[3] = ''
                     if len([list(x) for x in set(tuple(x) for x in duplicates_dict[key])]) == 1:
                         duplicates_dict[key] = [list(x) for x in set(tuple(x) for x in duplicates_dict[key])][0]
                     else:
-                        # remove: order
+                        # remove: class
                         for entry in duplicates_dict[key]:
-                            entry[3] = ''
-                        if len([list(x) for x in set(tuple(x) for x in duplicates_dict[key])]) == 1:
-                            duplicates_dict[key] = [list(x) for x in set(tuple(x) for x in duplicates_dict[key])][0]
-                        else:
-                            # remove: class
-                            for entry in duplicates_dict[key]:
-                                entry[2] = ''
-                                duplicates_dict[key] = entry
+                            entry[2] = ''
+                            duplicates_dict[key] = entry
 
-        hit_list_4 = []
-        for hit in hit_list_3:
-            if hit[0] in duplicates_dict.keys():
-                hit_list_4.append(duplicates_dict[hit[0]])
-            else:
-                hit_list_4.append(hit)
-        hit_list_4 = [list(x) for x in set(tuple(x) for x in hit_list_4)]
-        present_OTUs = [OTU[0] for OTU in hit_list_4]
+    hit_list_4 = []
+    for hit in hit_list_3:
+        if hit[0] in duplicates_dict.keys():
+            hit_list_4.append(duplicates_dict[hit[0]])
+        else:
+            hit_list_4.append(hit)
+    hit_list_4 = [list(x) for x in set(tuple(x) for x in hit_list_4)]
+    present_OTUs = [OTU[0] for OTU in hit_list_4]
 
-        # lastly add the OTU that had ch against the NCBI database
-        with open(fasta_file, 'r') as handle:
-            for record in SeqIO.parse(handle, 'fasta'):
-                if record.id not in present_OTUs:
-                    hit_list_4.append([record.id] + ['No Match'] * 7 + ['NCBI'])
+    # lastly add the OTU that had ch against the NCBI database
+    with open(fasta_file, 'r') as handle:
+        for record in SeqIO.parse(handle, 'fasta'):
+            if record.id not in present_OTUs:
+                hit_list_4.append([record.id] + ['No Match'] * 7 + ['NCBI'])
 
-        hit_table_4_df = pd.DataFrame(hit_list_4, columns=['ID','Phylum','Class','Order','Family','Genus','Species', 'Similarity', 'Status'])
-        #hit_table_4_df = sort_df(hit_table_4_df)
-        hit_table_4_df.to_excel(writer, sheet_name='JAMP hit', index=False)
+    hit_table_4_df = pd.DataFrame(hit_list_4, columns=['ID','Phylum','Class','Order','Family','Genus','Species', 'Similarity', 'Status'])
+    #hit_table_4_df = sort_df(hit_table_4_df)
+    hit_table_4_df.to_excel(writer, sheet_name='JAMP hit', index=False)
 
-        print(datetime.datetime.now().strftime('%H:%M:%S') + ': Finished writing taxonomy table.')
+    print(datetime.datetime.now().strftime('%H:%M:%S') + ': Finished writing taxonomy table.')
 
-        answer = sg.PopupYesNo('Open taxonomy table?')
-        if answer == 'Yes':
-            open_file(Path(taxonomy_table))
+    answer = sg.PopupYesNo('Open taxonomy table?')
+    if answer == 'Yes':
+        open_file(Path(taxonomy_table))
 
-        sg.Popup('Taxonomy table is found under {}.'.format(taxonomy_table))
+    sg.Popup('Taxonomy table is found under {}.'.format(taxonomy_table))
+
+    writer.save()
 
 ################################################################################
 ## general blastn function
@@ -385,8 +388,10 @@ def blastn(query_fasta, blastn_database, project_folder, n_threads, task):
     ## create the output file
     blast_csv = blast_folder.joinpath(query_fasta.stem + '_' + task + '.csv')
 
+    blastn_exe = "blastn"
+
     ## run blast search
-    subprocess.call(['blastn', '-task', task, '-db', str(db_folder), '-query', str(query_fasta), '-num_threads', str(n_threads),  '-outfmt', '6 delim=;; qseqid sseqid pident evalue', '-out', str(blast_csv)])
+    subprocess.call([blastn_exe, '-task', task, '-db', str(db_folder), '-query', str(query_fasta), '-num_threads', str(n_threads),  '-outfmt', '6 delim=;; qseqid sseqid pident evalue', '-out', str(blast_csv)])
 
     ## write the name of the database
     blast_log = blast_folder.joinpath('log.txt')
@@ -435,8 +440,10 @@ def create_database_diat_barcode(diatbarcode_xlsx, project_folder, databases_pat
     ## build a new database
     print('{}: Starting to build a new database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
 
+    makeblastdb_exe = "makeblastdb"
+
     db_name = Path(db_folder).joinpath('db')
-    subprocess.call(['makeblastdb', '-in', str(fasta_file), '-dbtype', 'nucl', '-out', str(db_name)])
+    subprocess.call([makeblastdb_exe, '-in', str(fasta_file), '-dbtype', 'nucl', '-out', str(db_name)])
 
     ## create a copy of the database xlsx
     diatbarcode_xlsx_db = db_folder.joinpath('db.xlsx')
@@ -466,8 +473,10 @@ def create_database_midori2(midori2_fasta, project_folder, databases_path):
     ## build a new database
     print('{}: Starting to build a new database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
 
+    makeblastdb_exe = "makeblastdb"
+
     db_name = Path(db_folder).joinpath('db')
-    subprocess.call(['makeblastdb', '-in', str(midori2_fasta), '-dbtype', 'nucl', '-out', str(db_name)])
+    subprocess.call([makeblastdb_exe, '-in', str(midori2_fasta), '-dbtype', 'nucl', '-out', str(db_name)])
 
     print('{}: Finished building database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
     sg.Popup('Finished building database.', title='Finished')
@@ -509,22 +518,21 @@ def create_database_trnl_P6(trnl_p6_xlsx, project_folder, databases_path):
     ## build a new database
     print('{}: Starting to build a new database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
 
+    makeblastdb_exe = "makeblastdb"
+
     db_name = Path(db_folder).joinpath('db')
-    subprocess.call(['makeblastdb', '-in', str(fasta_file), '-dbtype', 'nucl', '-out', str(db_name)])
+    subprocess.call([makeblastdb_exe, '-in', str(fasta_file), '-dbtype', 'nucl', '-out', str(db_name)])
 
     print('{}: Finished building database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
     sg.Popup('Finished building database.', title='Finished')
 
 ## local NCBI-mined DB
 
-# genbank_file = '/Users/tillmacher/Downloads/sequence_perciformes.gb'
-# databases_path = '/Users/tillmacher/Desktop/APSCALE_projects/APSCALE_databases'
-
 def create_database_NCBI(genbank_file, project_folder, databases_path):
     ' Create a database from the NCBI fasta using makeblastdb'
 
     ## build a new database
-    print('{}: Starting to build a new database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
+    print('{}: Collecting records from genbank file to build a new database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
 
     ## collect files
     genbank_file = Path(genbank_file)
@@ -538,29 +546,57 @@ def create_database_NCBI(genbank_file, project_folder, databases_path):
         pass
 
     ## collect taxids -> should be possible with seqio but isnt!
-    taxids = []
-    f = open(genbank_file, 'r')
-    for line in f.readlines():
+    fasta_file = Path(db_folder).joinpath('db.fasta')
+    f_fasta = open(fasta_file, 'w')
+    f_gb = open(genbank_file, 'r')
+    skipped = []
+
+    sequences = False
+    for line in f_gb.readlines():
+
+        if line.startswith('ACCESSION'):
+            accession = line.split()[1]
+
         if '/db_xref="taxon' in line:
             taxid = line.strip().split(':')[-1].replace('\"', '')
-            taxids.append(taxid)
-    f.close()
 
-    ## create a new fasta file from the genbank file
-    fasta_file = Path(db_folder).joinpath('db.fasta')
-    f = open(fasta_file, 'w')
+        if line.startswith('//'):
 
-    with open(genbank_file) as input_handle:
-        for i, record in enumerate(SeqIO.parse(input_handle, "genbank")):
-            id = '>{}\n'.format(taxids[i])
-            sequence = '{}\n'.format(str(record.seq))
-            f.write(id)
-            f.write(sequence)
-    f.close()
+            if accession == 'NW_019713564':
+                break
+
+            seq = ''.join(record)
+            allowed_s = "acgtuwsmkrybdhvn"
+            if all(ch in allowed_s for ch in seq) == True and seq != '':
+                id = '>{}_{}\n'.format(accession, taxid)
+                seq = '{}\n'.format(seq)
+                f_fasta.write(id)
+                f_fasta.write(seq)
+                sequences = False
+                record = []
+            else:
+                skipped.append(accession)
+                sequences = False
+                record = []
+
+        if sequences == True:
+            record.append(''.join(line.split()[1::]))
+
+        if line.startswith('ORIGIN'):
+            sequences = True
+            record = []
+
+    f_gb.close()
+    f_fasta.close()
+
+    print('{}: Skipped {} malformated record(s).'.format(datetime.datetime.now().strftime('%H:%M:%S'), len(skipped)))
+
+    makeblastdb_exe = "makeblastdb"
 
     ## create db
+    print('{}: Starting to build a new database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
     db_name = Path(db_folder).joinpath('db')
-    subprocess.call(['makeblastdb', '-in', str(fasta_file), '-dbtype', 'nucl', '-out', str(db_name)])
+    subprocess.call([makeblastdb_exe, '-in', str(fasta_file), '-dbtype', 'nucl', '-out', str(db_name)])
 
     print('{}: Finished building database.'.format(datetime.datetime.now().strftime('%H:%M:%S')))
     sg.Popup('Finished building database.', title='Finished')
@@ -768,16 +804,7 @@ def filter_blastn_results_NCBI(blast_csv, read_table, project_folder):
 ################################################################################
 ## result filtering
 
-# blast_csv = '/Users/tillmacher/Desktop/APSCALE_projects/test_apscale/10_local_BLAST/BLAST_fish_blast_(06_09_22_11_52)/fish_blast_megablast.csv'
-# blastn_database = '/Users/tillmacher/Desktop/APSCALE_projects/APSCALE_databases/DB_2022-05-25-Diat_barcode-release-version_11_1'
-#
-# read_table = '/Users/tillmacher/Desktop/APSCALE_projects/test_apscale/12_database_blast_files/fish_blast.xlsx'
-# project_folder = '/Users/tillmacher/Desktop/APSCALE_projects/test_apscale/'
-# filter_tresholds = [98, 95, 90, 85, 80]
-# database_type = 'custom_NCBI'
-# reference_databases = ['Diat.barcode', 'Mitofish', 'Local NCBI', 'Midori2']
-
-def filter_blast_results(blast_csv, read_table, project_folder, blastn_database, filter_tresholds, database_type):
+def filter_blast_results(blast_csv, read_table, project_folder, blastn_database, filter_tresholds, database_type, threshold_e_value):
 
     ## collect files and folders
     blast_csv = Path(blast_csv)
@@ -824,7 +851,6 @@ def filter_blast_results(blast_csv, read_table, project_folder, blastn_database,
                 if answer == 'Yes':
                     taxid_df.drop(indexNames , inplace=True)
 
-
     #############################################################################
     ## PRE FILTER HITS
     #############################################################################
@@ -840,8 +866,9 @@ def filter_blast_results(blast_csv, read_table, project_folder, blastn_database,
         df = blast_df.loc[blast_df['ID'] == query][['Sequence ID','Similarity', 'evalue']]
         best_evalue = df['evalue'].values.tolist()[0]
 
-        ## collect all hits that have the same similarity (beginning from the best hit)
-        sorted_hits_dict[query] = df.loc[df['evalue'] == best_evalue].values.tolist()
+        if best_evalue <= threshold_e_value:
+            ## collect all hits that have the same similarity (beginning from the best hit)
+            sorted_hits_dict[query] = df.loc[df['evalue'] == best_evalue].values.tolist()
 
     #############################################################################
     ## DATABASE SPECIFIC PROCESSING
@@ -874,8 +901,14 @@ def filter_blast_results(blast_csv, read_table, project_folder, blastn_database,
 
                 if taxid not in taxid_storage.keys():
                     res = ncbi_taxid_request(taxid)
-                    value[0] = res
-                    taxid_storage[taxid] = res
+                    if len(res) == 6:
+                        value[0] = res
+                        taxid_storage[taxid] = res
+                    else:
+                        n = 6 - len(res)
+                        res + [''] * n
+                        value[0] = res
+                        taxid_storage[taxid] = res
                 else:
                     value[0] = taxid_storage[taxid]
 
@@ -916,14 +949,18 @@ def filter_blast_results(blast_csv, read_table, project_folder, blastn_database,
         for key, values in tqdm(sorted_hits_dict.items()):
             for value in values:
 
-                taxid = int(value[0])
+                taxid = int(value[0].split('_')[-1])
 
                 if taxid not in taxid_storage.keys():
                     res = ncbi_taxid_request(taxid)
-                    value[0] = res
-                    taxid_storage[taxid] = res
-                else:
-                    value[0] = taxid_storage[taxid]
+                    if len(res) == 6:
+                        value[0] = res
+                        taxid_storage[taxid] = res
+                    else:
+                        n = 6 - len(res)
+                        res + [''] * n
+                        value[0] = res
+                        taxid_storage[taxid] = res
 
         taxid_df = pd.DataFrame.from_dict(taxid_storage, orient='index')
         taxid_df.to_excel(taxids_xlsx)
