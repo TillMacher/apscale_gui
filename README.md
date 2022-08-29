@@ -478,6 +478,8 @@ Available from here: http://www.reference-midori.info/download.php#
 
 Please download the latest .fasta file!
 
+The PATH should be as follows: GenBank2xx/BLAST/longest/fasta/*.fasta.zip
+
 For example: Databases/GenBank249/BLAST_AA_sp/fasta/MIDORI_LONGEST_AA_GB249_CO1_BLAST.fasta.zip
 
 Unzip it to recieve the .fasta file!
@@ -502,9 +504,17 @@ Then download the .gb file!
 
 Alternatively (for large datasets) one can use the Entrez-Direct tool: https://www.ncbi.nlm.nih.gov/books/NBK179288/
 
+
+<details><summary> The easiest way to construct a query is by using the the Genbank browser and copying the search details: </summary>
+
+<img width="1175" alt="image" src="https://user-images.githubusercontent.com/48299746/173529849-ec54c414-dc98-4be9-9a1f-6ff5af922447.png">
+  
+</details>
+
 The following command will download all 12S reference sequences for vertebrates:
 
-`esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields])' | efetch -format gb > Desktop/vertebrate_sequences.gb`
+`esearch -db nuccore -query '12S[All Fields] AND ("Vertebrata"[Organism] OR "Vertebrata"[Organism] OR Vertebrata[All Fields]) AND is_nuccore[filter]' | efetch -format gb > Desktop/vertebrate_sequences.gb`
+
 
 ### My database is missing!
 
