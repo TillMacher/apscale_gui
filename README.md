@@ -152,6 +152,8 @@ APSCALE is organized in projects with the following structure:
 ### Input data
 APSCALE expects *demultiplexed .fastq.gz files* in the 2_demultiplexing/data folder (see above).
 
+APSCALE expects the paired-end reads to end on e.g. *_R1.fastq.gz* and *_R2.fastq.gz*! If APSCALE crashes and you need to rename your files you can simply use the rename tool integrated in APSCALE.
+
 If you prefer to have your data all in one place you can copy the raw data into 1_raw_data/data. However, demultiplexing won't be handled by APSCALE directly, but the GUI version has a demultiplexing tool implemented (see https://github.com/DominikBuchner/demultiplexer).
 
 
