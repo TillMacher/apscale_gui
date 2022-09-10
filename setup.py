@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="apscale_gui",
-    version="1.1.5",
+    version="1.1.7",
     author="Till-Hendrik Macher",
     author_email="till-hendrik.macher@uni-due.de",
     description="Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data - Graphical User Interface",
@@ -22,7 +22,7 @@ setuptools.setup(
                         'plotly >= 4.9.0',
                         'requests >= 2.25.1',
                         'requests_html >= 0.10.0',
-                        'kaleido >= 0.2.1',
+                        'kaleido >= 0.0.3',
                         'xlsxwriter >= 3.0.2',
                         'tqdm >= 4.60.0',
                         'ete3 >= 3.1.2',

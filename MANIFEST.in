@@ -1,7 +1,7 @@
 include apscale_gui/_source/demultiplexing.png
 include apscale_gui/_source/summary_statistics.png
 include apscale_gui/_source/local_blast.png
-include apscale_gui/_source/log_file.png
+include apscale_gui/_source/export_results.png
 include apscale_gui/_source/boldigger.png
 include apscale_gui/_source/ncbi_blast.png
 include apscale_gui/_source/sample_renaming.png
