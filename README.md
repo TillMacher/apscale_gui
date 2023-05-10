@@ -524,9 +524,8 @@ Just let us know if there is need for further databases and we will try to add t
 
 ## Citation
 
-For now APSCALE-GUI can be cited with this Github page. A publication is coming soon.
-
-Please also cite:
+Please cite:
+* [APSCALE] (https://academic.oup.com/bioinformatics/article/38/20/4817/6677653)
 * [VSEARCH](https://peerj.com/articles/2584/?report=reader)
 * [Cutadapt](https://journal.embnet.org/index.php/embnetjournal/article/view/200)
 * [LULU](https://www.nature.com/articles/s41467-017-01312-x)
