@@ -411,10 +411,7 @@ def run_apscale(project_folder, current_project, updated_data):
 ## apscale main window
 def create_apscale_main_window(project_folder, current_project):
 
-    ####################################################################################################################
-    ## run apscale pipeline
     def save_and_submit(project_folder, current_project):
-        ## collect data
         updated_data = {
             "cores to use": entry1.get(),
             "compression level": entry2.get(),
@@ -431,26 +428,19 @@ def create_apscale_main_window(project_folder, current_project):
             "minsize": entry13.get(),
             "dropdown": dropdown_var.get()
         }
-
-        ## Run apscale pipeline
         run_apscale(project_folder, current_project, updated_data)
 
-    ####################################################################################################################
-
-    # Create the main window
     root = tk.Tk()
     root.title("Apscale")
-
-    ## read settings_file
     data = load_settings_file(project_folder, current_project)
 
     # Create labels and entry fields for each category
     labels = [
-        "1: cores to use", "1: compression level",
-        "2: maxdiffpct", "2: maxdiffs", "2: minovlen",
-        "3: P5 Primer (5' - 3')", "3: P7 Primer (5' - 3')", "3: anchoring",
-        "4: maxEE", "4: min length", "4: max length",
-        "5: alpha", "5: minsize"
+        "cores to use", "compression level",
+        "maxdiffpct", "maxdiffs", "minovlen",
+        "P5 Primer (5' - 3')", "P7 Primer (5' - 3')", "anchoring",
+        "maxEE", "min length", "max length",
+        "alpha", "minsize"
     ]
     default_values = list(data.values())
     entries = []
@@ -460,39 +450,68 @@ def create_apscale_main_window(project_folder, current_project):
     label = tk.Label(root, text="Raw data processing", font=font.Font(weight="bold"))
     label.grid(row=0, column=0, columnspan=2, pady=10)
 
-    # Add an extra row for spacing
-    tk.Label(root, text="").grid(row=1, column=0, pady=5)
-
-    for i, (label, default_value) in enumerate(zip(labels, default_values)):
-        tk.Label(root, text=label).grid(row=i + 1, column=0, padx=10, pady=5, sticky="w")
+    # Headers and input fields with reduced spacing
+    # General settings (category 1)
+    tk.Label(root, text="General settings", font=font.Font(weight="bold")).grid(row=2, column=0, columnspan=2, pady=(10, 5))
+    for i, (label, default_value) in enumerate(zip(labels[:2], default_values[:2]), start=3):
+        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
         entry_var = tk.StringVar(value=default_value)
         entry = tk.Entry(root, textvariable=entry_var)
-        entry.grid(row=i + 1, column=1, padx=10, pady=5, sticky="w")
+        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
         entries.append(entry)
-        entry_vars.append(entry_var)
+
+    # PE merging (category 2)
+    tk.Label(root, text="PE merging", font=font.Font(weight="bold")).grid(row=5, column=0, columnspan=2, pady=(10, 5))
+    for i, (label, default_value) in enumerate(zip(labels[2:5], default_values[2:5]), start=6):
+        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
+        entry_var = tk.StringVar(value=default_value)
+        entry = tk.Entry(root, textvariable=entry_var)
+        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
+        entries.append(entry)
+
+    # Primer trimming (category 3)
+    tk.Label(root, text="Primer trimming", font=font.Font(weight="bold")).grid(row=9, column=0, columnspan=2, pady=(10, 5))
+    for i, (label, default_value) in enumerate(zip(labels[5:8], default_values[5:8]), start=10):
+        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
+        entry_var = tk.StringVar(value=default_value)
+        entry = tk.Entry(root, textvariable=entry_var)
+        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
+        entries.append(entry)
+
+    # Quality filtering (category 4)
+    tk.Label(root, text="Quality filtering", font=font.Font(weight="bold")).grid(row=13, column=0, columnspan=2, pady=(10, 5))
+    for i, (label, default_value) in enumerate(zip(labels[8:11], default_values[8:11]), start=14):
+        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
+        entry_var = tk.StringVar(value=default_value)
+        entry = tk.Entry(root, textvariable=entry_var)
+        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
+        entries.append(entry)
+
+    # Denoising (category 5)
+    tk.Label(root, text="Denoising", font=font.Font(weight="bold")).grid(row=18, column=0, columnspan=2, pady=(10, 5))
+    for i, (label, default_value) in enumerate(zip(labels[11:], default_values[11:]), start=19):
+        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
+        entry_var = tk.StringVar(value=default_value)
+        entry = tk.Entry(root, textvariable=entry_var)
+        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
+        entries.append(entry)
 
     entry1, entry2, entry3, entry4, entry5, entry6, entry7, entry8, entry9, entry10, entry11, entry12, entry13 = entries
 
-    # Create a folder selection button
-    label = tk.Label(root, text="Select task:", font=font.Font(weight="bold"))
-    label.grid(row=16, column=0, pady=10)
-
     # Create a dropdown menu
+    tk.Label(root, text="Select task:", font=font.Font(weight="bold")).grid(row=23, column=0, pady=10)
     dropdown_var = tk.StringVar(value="Run apscale")
     dropdown_options = ["Run apscale", "PE merging", "primer trimming", "quality filtering",
                         "dereplication", "denoising", "generate ESV table"]
     dropdown_menu = tk.OptionMenu(root, dropdown_var, *dropdown_options)
-    dropdown_menu.grid(row=16, column=1, pady=10, sticky="w")
+    dropdown_menu.grid(row=23, column=1, pady=10, sticky="w")
 
-    # Create a submit button
+    # Submit and return buttons
     submit_button = tk.Button(root, text="Save & submit", command=lambda: save_and_submit(project_folder, current_project))
-    submit_button.grid(row=17, column=1, columnspan=2, pady=10, sticky="w")
-
-    # Create a return button
+    submit_button.grid(row=24, column=1, columnspan=2, pady=10, sticky="w")
     return_button = tk.Button(root, text="Return", command=lambda: cancel(project_folder, current_project, root))
-    return_button.grid(row=18, column=1, columnspan=2, pady=10, sticky="w")
+    return_button.grid(row=25, column=1, columnspan=2, pady=10, sticky="w")
 
-    # Run the application
     root.mainloop()
 
 def create_local_blastn_window(project_folder, current_project):
@@ -537,7 +556,7 @@ def create_local_blastn_window(project_folder, current_project):
 
     # Initialize data dictionary
     data = {
-        'cores': multiprocessing.cpu_count() - 1,
+        'cores': multiprocessing.cpu_count() - 2,
         'subset_size': 100,
         'max_target_seqs': 20,
         'Species': 97,
@@ -758,7 +777,7 @@ def show_error_window(message):
     tk.Button(error_root, text="OK", command=error_root.destroy).pack(pady=10)
     error_root.mainloop()
 
-## main function
+## main function (needs to be seperate to be called again when exiting certain windows
 def apscale_gui(project_folder, current_project):
     global result
     result = None
