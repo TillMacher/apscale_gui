@@ -608,7 +608,10 @@ def create_local_blastn_window(project_folder, current_project):
     label = tk.Label(root, text="Select query fasta:", font=font.Font(weight="bold"))
     label.grid(row=17, column=0, pady=10)
     all_fasta_files = glob.glob(str(Path(current_project).joinpath('8_esv_table/*.fasta')))
-    fasta_names = [Path(i).name for i in all_fasta_files]
+    if all_fasta_files == []:
+        fasta_names = ['No files available.']
+    else:
+        fasta_names = [Path(i).name for i in all_fasta_files]
     dropdown_var_fasta = tk.StringVar(value=fasta_names[0])
     dropdown_options = fasta_names
     dropdown_menu = tk.OptionMenu(root, dropdown_var_fasta, *dropdown_options)
@@ -618,7 +621,10 @@ def create_local_blastn_window(project_folder, current_project):
     label = tk.Label(root, text="Select database:", font=font.Font(weight="bold"))
     label.grid(row=18, column=0, pady=10)
     all_dbs = glob.glob(str(Path(project_folder).joinpath('apscale_databases/*')))
-    db_names = [Path(i).name for i in all_dbs]
+    if all_dbs == []:
+        db_names = ['No databases available.']
+    else:
+        db_names = [Path(i).name for i in all_dbs]
     dropdown_var_dbs = tk.StringVar(value=db_names[0])
     dropdown_options = db_names
     dropdown_menu = tk.OptionMenu(root, dropdown_var_dbs, *dropdown_options)
@@ -723,7 +729,11 @@ def create_boldigger2_window(project_folder, current_project):
     label = tk.Label(root, text="Select query fasta:", font=font.Font(weight="bold"))
     label.grid(row=17, column=0, pady=10)
     all_fasta_files = glob.glob(str(Path(current_project).joinpath('8_esv_table/*.fasta')))
-    fasta_names = [Path(i).name for i in all_fasta_files]
+    if all_fasta_files == []:
+        fasta_names = ['No files available.']
+    else:
+        fasta_names = [Path(i).name for i in all_fasta_files]
+    dropdown_var_fasta = tk.StringVar(value=fasta_names[0])
     dropdown_var_fasta = tk.StringVar(value=fasta_names[0])
     dropdown_options = fasta_names
     dropdown_menu = tk.OptionMenu(root, dropdown_var_fasta, *dropdown_options)
