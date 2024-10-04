@@ -50,7 +50,13 @@ Creating a New Project
 
 4.	When prompted, select an output directory. It is recommended to create a new folder, such as “APSCALE_projects,” and select it using the “Browse” button.
 
-5.	After clicking “Continue,” the main menu will appear. If you are starting APSCALE GUI for the first time, click the “Create New Apscale Project” button to start a new project. You will be prompted to name your project, and a new project folder will be created with the following subdirectories:
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_figures/Apscale_gui_1.png" alt="Startup window" width="500"/>
+
+5.	After clicking “Continue,” the main menu will appear.
+
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_figures/Apscale_gui_2.png" alt="Main window" width="500"/>
+
+6.	If you are starting APSCALE GUI for the first time, click the “Create New Apscale Project” button to start a new project. You will be prompted to name your project, and a new project folder will be created with the following subdirectories:
 
 <pre>
 /YOUR_PROJECT_PATH/My_new_project/
@@ -84,7 +90,9 @@ Ensure that the paired-end reads end with _R1.fastq.gz and _R2.fastq.gz.
 
 Optionally, you can place raw data in the 1_raw_data/data folder, but note that APSCALE does not handle demultiplexing directly. You can use tools like the [Demultiplexer tool](https://github.com/DominikBuchner/demultiplexer) for this step.
 
-Running APSCALE: All-in-One Analysis
+### Running APSCALE: All-in-One Analysis
+
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_figures/Apscale_gui_3.png" alt="Startup window" width="500"/>
 
 1. Adjust Settings: Before running APSCALE, make sure to adjust the necessary settings. You can do this:
 * Directly in the GUI, or
@@ -100,6 +108,8 @@ Running APSCALE: All-in-One Analysis
 
 The Local BLASTn module performs taxonomic assignments for your data. It uses the APSCALE-BLAST module.
 
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_figures/Apscale_gui_4.png" alt="Startup window" width="500"/>
+
 1. Download Database: [Download your database of choice from this server](https://seafile.rlp.net/d/754a25aa76e44b2381b6/).
 2. Select Database: After unpacking the database into the “Apscale_databases” folder within your project directory, select the desired database for taxonomic assignment in the GUI.
 3. Run the BLASTn search.
@@ -108,6 +118,8 @@ The Local BLASTn module performs taxonomic assignments for your data. It uses th
 ### BOLDigger2
 
 The BOLDigger2 module is used for taxonomic assignments against the BOLD database, based on the [BOLDigger2 pipeline](https://github.com/DominikBuchner/BOLDigger2/tree/main).
+
+<img src="https://github.com/TillMacher/apscale_gui/blob/master/_figures/Apscale_gui_5.png" alt="Startup window" width="500"/>
 
 1. Enter Credentials: You will need to provide your BOLDsystems username and password to allow BOLDigger2 to perform the taxonomic assignment.
 2. Save Results: The resulting taxonomy table will be written into the 8_esv_table folder.
