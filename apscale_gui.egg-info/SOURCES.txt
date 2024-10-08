@@ -1,0 +1,13 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+apscale_gui/__init__.py
+apscale_gui/__main__.py
+apscale_gui.egg-info/PKG-INFO
+apscale_gui.egg-info/SOURCES.txt
+apscale_gui.egg-info/dependency_links.txt
+apscale_gui.egg-info/entry_points.txt
+apscale_gui.egg-info/requires.txt
+apscale_gui.egg-info/top_level.txt
+apscale_gui/_user_data/user_data.txt

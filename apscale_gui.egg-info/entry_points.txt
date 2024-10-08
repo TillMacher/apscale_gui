@@ -1,0 +1,2 @@
+[console_scripts]
+apscale_gui = apscale_gui.__main__:main
