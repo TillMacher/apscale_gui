@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: apscale_gui
-Version: 2.0.1
+Version: 2.0.3
 Summary: Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data - Graphical User Interface
 Home-page: https://github.com/TillMacher/apscale_gui
 Author: Till-Hendrik Macher
@@ -14,7 +14,7 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: apscale>=2.0.3
 Requires-Dist: apscale_blast>=1.0.2
-Requires-Dist: boldigger2>=2.0.7
+Requires-Dist: boldigger3>=1.1.1
 Requires-Dist: pandas>=2.2.3
 Requires-Dist: update_checker>=0.18.0
 Requires-Dist: xlsxwriter>=3.2.0

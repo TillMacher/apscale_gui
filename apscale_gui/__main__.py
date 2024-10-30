@@ -4,6 +4,7 @@ from tkinter import messagebox, filedialog, simpledialog
 from pathlib import Path
 import subprocess, glob, sys
 from tkinter import font
+from tkinter import ttk
 import pandas as pd
 import apscale.b_pe_merging as b_pe_merging
 import apscale.c_primer_trimming as c_primer_trimming
@@ -14,7 +15,9 @@ import apscale.g_generate_esv_table as g_generate_esv_table
 from apscale_blast.a_blastn import main as a_blastn
 from apscale_blast.b_filter import main as b_filter
 import multiprocessing
-import boldigger2.id_engine_coi as id_engine_coi
+import boldigger3.id_engine as id_engine
+import boldigger3.additional_data_download as additional_data_download
+import boldigger3.select_top_hit as select_top_hit
 import importlib.metadata
 from update_checker import update_check
 import importlib.metadata
@@ -35,7 +38,7 @@ def check_package_update(package_name):
 check_package_update('apscale_gui')
 check_package_update('apscale')
 check_package_update('apscale_blast')
-check_package_update('boldigger2')
+check_package_update('boldigger3')
 
 ## initialize a pressed button
 def button_pressed(button_name, root):
@@ -242,7 +245,7 @@ def create_start_window(project_folder, current_project):
     button_d = tk.Button(task_frame, text="Local BLASTn", command=lambda: button_pressed("Local blastn", root))
     button_d.pack(pady=5, padx=10)
 
-    button_e = tk.Button(task_frame, text="BOLDigger2", command=lambda: button_pressed("BOLDigger2", root))
+    button_e = tk.Button(task_frame, text="BOLDigger3", command=lambda: button_pressed("BOLDigger3", root))
     button_e.pack(pady=5, padx=10)
 
     # Exit Button Section
@@ -660,14 +663,14 @@ def create_local_blastn_window(project_folder, current_project):
     # Run the application
     root.mainloop()
 
-def create_boldigger2_window(project_folder, current_project):
+def create_boldigger3_window(project_folder, current_project):
     ####################################################################################################################
     ## run apscale pipeline
-    def save_and_submit(project_folder, current_project):
+    def save_and_submit(project_folder, current_project, bold_databases, operating_modes):
         # Capture the updated values from input fields
         updated_data = {
-            'username': username_entry.get(),
-            'password': pw_entry.get(),
+            'database': bold_databases[db_entry.get()],
+            'operating_mode': operating_modes[mode_entry.get()],
             'Species': int(species_entry.get()),
             'Genus': int(genus_entry.get()),
             'Family': int(family_entry.get()),
@@ -679,20 +682,34 @@ def create_boldigger2_window(project_folder, current_project):
         ## collect thresholds
         thresholds = [updated_data['Species'], updated_data['Genus'], updated_data['Family'], updated_data['Order'], updated_data['Class']]
 
-        ## start boldigger2
-        id_engine_coi.main(
-            updated_data['query_fasta'],
-            updated_data['username'],
-            updated_data['password'],
-            thresholds,
-        )
+        # run the boldigger3 id engine
+        id_engine.main(updated_data['query_fasta'], updated_data['database'], updated_data['operating_mode'],)
+        # download the additional data
+        additional_data_download.main(updated_data['query_fasta'])
+        # select the top hit
+        select_top_hit.main(updated_data['query_fasta'], thresholds=thresholds)
 
     ####################################################################################################################
 
+    bold_databases = {  "ANIMAL LIBRARY (PUBLIC)":1,
+                        "ANIMAL SPECIES-LEVEL LIBRARY (PUBLIC + PRIVATE)":2,
+                        "ANIMAL LIBRARY (PUBLIC+PRIVATE)":3,
+                        "VALIDATED CANADIAN ARTHROPOD LIBRARY":4,
+                        "PLANT LIBRARY (PUBLIC)":5,
+                        "FUNGI LIBRARY (PUBLIC)":6,
+                        "ANIMAL SECONDARY MARKERS (PUBLIC)":7
+                    }
+
+    operating_modes = {
+                        "Rapid Species Search":1,
+                        "Genus and Species Search":2,
+                        "Exhaustive Search":3
+                    }
+
     # Initialize data dictionary
     data = {
-        'username': '',
-        'password': '',
+        'database': "ANIMAL LIBRARY (PUBLIC+PRIVATE)",
+        'mode': "Exhaustive Search",
         'Species': 97,
         'Genus': 95,
         'Family': 90,
@@ -702,22 +719,23 @@ def create_boldigger2_window(project_folder, current_project):
 
     # Create the main window
     root = tk.Tk()
-    root.title("Boldigger2")
+    root.title("Boldigger3")
 
     # Add welcome text
-    label = tk.Label(root, text="Boldigger2 identification engine", font=font.Font(weight="bold"))
+    label = tk.Label(root, text="Boldigger3 identification engine", font=font.Font(weight="bold"))
     label.grid(row=0, column=0, columnspan=2, pady=10)
 
-    # Create input fields for each data entry
-    tk.Label(root, text="Username:").grid(row=2, column=0, sticky="e")
-    username_entry = tk.Entry(root)
-    username_entry.insert(0, data['username'])
-    username_entry.grid(row=2, column=1)
+    # Create Database dropdown menu
+    tk.Label(root, text="Database:").grid(row=2, column=0, sticky="e")
+    db_entry = ttk.Combobox(root, values=list(bold_databases.keys()))
+    db_entry.set(data['database'])  # Set default value
+    db_entry.grid(row=2, column=1)
 
-    tk.Label(root, text="Password:").grid(row=3, column=0, sticky="e")
-    pw_entry = tk.Entry(root, show="*")  # Hide the password by showing '*' for each character
-    pw_entry.insert(0, data['password'])
-    pw_entry.grid(row=3, column=1)
+    # Create Mode dropdown menu
+    tk.Label(root, text="Mode:").grid(row=3, column=0, sticky="e")
+    mode_entry = ttk.Combobox(root, values=list(operating_modes.keys()))
+    mode_entry.set(data['mode'])  # Set default value
+    mode_entry.grid(row=3, column=1)
 
     tk.Label(root, text="Species:").grid(row=5, column=0, sticky="e")
     species_entry = tk.Entry(root)
@@ -759,7 +777,7 @@ def create_boldigger2_window(project_folder, current_project):
     dropdown_menu.grid(row=17, column=1, pady=10, sticky="w")
 
     # Create a submit button
-    submit_button = tk.Button(root, text="Save & Submit", command=lambda: save_and_submit(project_folder, current_project))
+    submit_button = tk.Button(root, text="Save & Submit", command=lambda: save_and_submit(project_folder, current_project, bold_databases, operating_modes))
     submit_button.grid(row=19, column=1, columnspan=2, pady=10, sticky="w")
 
     # Create a return button
@@ -809,9 +827,9 @@ def apscale_gui(project_folder, current_project):
             show_error_window("No project folder selected. Please create or load a project first.")
             return_to_start(project_folder, current_project)
 
-    if result == "BOLDigger2":
+    if result == "BOLDigger3":
         if current_project != 'Not selected':
-            create_boldigger2_window(project_folder, current_project)
+            create_boldigger3_window(project_folder, current_project)
         else:
             show_error_window("No project folder selected. Please create or load a project first.")
             return_to_start(project_folder, current_project)
