@@ -1,5 +1,6 @@
 import os.path
 import tkinter as tk
+import webbrowser
 from tkinter import messagebox, filedialog, simpledialog
 from pathlib import Path
 import subprocess, glob, sys
@@ -22,6 +23,7 @@ import importlib.metadata
 from update_checker import update_check
 import importlib.metadata
 import platform
+from ete3 import NCBITaxa, Tree
 
 ## check for updates
 def check_package_update(package_name):
@@ -88,6 +90,21 @@ def import_user_data():
         f = open(file, 'w')
         f.close()
         return Path('./')
+
+def open_remote_blast_help():
+    webbrowser.open('https://github.com/TillMacher/apscale_blast/tree/main?tab=readme-ov-file#remote-blast')
+
+def open_blast_help():
+    webbrowser.open('https://github.com/TillMacher/apscale_blast/tree/main?tab=readme-ov-file#apscale-blast')
+
+def open_apscale_help():
+    webbrowser.open('https://github.com/DominikBuchner/apscale/tree/main?tab=readme-ov-file#apscale')
+
+def open_boldigger_help():
+    webbrowser.open('https://github.com/DominikBuchner/BOLDigger3?tab=readme-ov-file#introduction')
+
+def open_lastest_dbs():
+    webbrowser.open('https://seafile.rlp.net/d/474b9682a5cb4193a6ad/')
 
 ## if apscale gui is started for the first time, initialize a window that asks for the apscale projects folder
 def create_initialize_window():
@@ -509,11 +526,18 @@ def create_apscale_main_window(project_folder, current_project):
     dropdown_menu = tk.OptionMenu(root, dropdown_var, *dropdown_options)
     dropdown_menu.grid(row=23, column=1, pady=10, sticky="w")
 
+    ## Help button
+    label = tk.Label(root, text="Apscale:", font=font.Font(weight="bold"))
+    label.grid(row=24, column=0, pady=10)
+    help_button = tk.Button(root, text="Github readme", command=open_apscale_help)
+    help_button.grid(row=24, column=1, columnspan=2, pady=10, sticky="w")
+
     # Submit and return buttons
     submit_button = tk.Button(root, text="Save & submit", command=lambda: save_and_submit(project_folder, current_project))
-    submit_button.grid(row=24, column=1, columnspan=2, pady=10, sticky="w")
+    submit_button.grid(row=25, column=1, columnspan=2, pady=10, sticky="w")
+
     return_button = tk.Button(root, text="Return", command=lambda: cancel(project_folder, current_project, root))
-    return_button.grid(row=25, column=1, columnspan=2, pady=10, sticky="w")
+    return_button.grid(row=26, column=1, columnspan=2, pady=10, sticky="w")
 
     root.mainloop()
 
@@ -532,28 +556,46 @@ def create_local_blastn_window(project_folder, current_project):
             'Order': int(order_entry.get()),
             'Class': int(class_entry.get()),
             'task': dropdown_var_task.get(),
+            'headless': "True",
             'query_fasta': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get())),
-            'db_folder': str(Path(project_folder).joinpath('apscale_databases', dropdown_var_dbs.get())),
-            'out': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get().replace('.fasta', '')))
+            'out': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get().replace('.fasta', '_blastn')))
         }
 
-        a_blastn('blastn',
-                 updated_data['query_fasta'],
-                 updated_data['db_folder'],
-                 updated_data['out'],
-                 updated_data['cores'],
-                 updated_data['task'],
-                 updated_data['subset_size'],
-                 updated_data['max_target_seqs'],
-                 'nan')
+        # add database
+        if dropdown_var_dbs.get() == 'remote':
+            updated_data['db_folder'] = 'remote'
+        else:
+            updated_data['db_folder'] = str(Path(project_folder).joinpath('apscale_databases', dropdown_var_dbs.get()))
+
+        continue_blast = a_blastn('blastn',
+                 updated_data['query_fasta'], # -query_fasta
+                 updated_data['db_folder'], # -database
+                 updated_data['out'], # -out
+                 updated_data['cores'], # -cores
+                 updated_data['task'], # -task
+                 updated_data['subset_size'], # -subset_size
+                 updated_data['max_target_seqs'], # -max_target_seqs
+                 'No', # -masking
+                 updated_data['headless'], # -headless
+                 False, # -gui
+                 )
 
         # create thresholds
-        thresholds = [updated_data['Species'], updated_data['Genus'], updated_data['Family'], updated_data['Order'], updated_data['Class']]
-        b_filter(updated_data['out'],
-                 updated_data['db_folder'],
-                 ','.join([str(i) for i in thresholds]),
-                 updated_data['cores'],
-                 )
+        if continue_blast == True:
+            thresholds = [updated_data['Species'], updated_data['Genus'], updated_data['Family'], updated_data['Order'], updated_data['Class']]
+            b_filter(updated_data['out'],
+                     updated_data['db_folder'],
+                     ','.join([str(i) for i in thresholds]),
+                     updated_data['cores'],
+                     )
+        else:
+            print('\nNot all fasta subsets have been processed yet!')
+
+    def update_ncbi_taxonomy():
+        print("Updating NCBI taxonomy database...")
+        ncbi = NCBITaxa()
+        ncbi.update_taxonomy_database()
+        print("Taxonomy database updated successfully.")
 
     ####################################################################################################################
 
@@ -639,10 +681,10 @@ def create_local_blastn_window(project_folder, current_project):
     dropdown_menu = tk.OptionMenu(root, dropdown_var_fasta, *dropdown_options)
     dropdown_menu.grid(row=17, column=1, pady=10, sticky="w")
 
-    # Select fasta file
+    # Select db file
     label = tk.Label(root, text="Select database:", font=font.Font(weight="bold"))
     label.grid(row=18, column=0, pady=10)
-    all_dbs = glob.glob(str(Path(project_folder).joinpath('apscale_databases/*')))
+    all_dbs = glob.glob(str(Path(project_folder).joinpath('apscale_databases/*'))) + ['remote']
     if all_dbs == []:
         db_names = ['No databases available.']
     else:
@@ -652,13 +694,37 @@ def create_local_blastn_window(project_folder, current_project):
     dropdown_menu = tk.OptionMenu(root, dropdown_var_dbs, *dropdown_options)
     dropdown_menu.grid(row=18, column=1, pady=10, sticky="w")
 
+    ## Latest dbs button
+    label = tk.Label(root, text="Blastn:", font=font.Font(weight="bold"))
+    label.grid(row=19, column=0, pady=10)
+    help_button2 = tk.Button(root, text="Database download", command=open_lastest_dbs)
+    help_button2.grid(row=19, column=1, columnspan=2, pady=10, sticky="w")
+
+    ## Help button
+    label = tk.Label(root, text="Blastn:", font=font.Font(weight="bold"))
+    label.grid(row=20, column=0, pady=10)
+    help_button2 = tk.Button(root, text="Github readme", command=open_blast_help)
+    help_button2.grid(row=20, column=1, columnspan=2, pady=10, sticky="w")
+
+    # Create an update taxonomy button
+    label = tk.Label(root, text="Remote blastn:", font=font.Font(weight="bold"))
+    label.grid(row=21, column=0, pady=10)
+    taxonomy_button = tk.Button(root, text="Update taxid database", command=update_ncbi_taxonomy)
+    taxonomy_button.grid(row=21, column=1, columnspan=2, pady=10, sticky="w")
+
+    ## Help button
+    label = tk.Label(root, text="Remote blastn:", font=font.Font(weight="bold"))
+    label.grid(row=22, column=0, pady=10)
+    help_button1 = tk.Button(root, text="Github readme", command=open_remote_blast_help)
+    help_button1.grid(row=22, column=1, columnspan=2, pady=10, sticky="w")
+
     # Create a submit button
     submit_button = tk.Button(root, text="Save & Submit", command=lambda: save_and_submit(project_folder, current_project))
-    submit_button.grid(row=19, column=1, columnspan=2, pady=10, sticky="w")
+    submit_button.grid(row=23, column=1, columnspan=2, pady=10, sticky="w")
 
     # Create a return button
     return_button = tk.Button(root, text="Return", command=lambda: cancel(project_folder, current_project, root))
-    return_button.grid(row=20, column=1, columnspan=2, pady=10, sticky="w")
+    return_button.grid(row=24, column=1, columnspan=2, pady=10, sticky="w")
 
     # Run the application
     root.mainloop()
@@ -776,13 +842,19 @@ def create_boldigger3_window(project_folder, current_project):
     dropdown_menu = tk.OptionMenu(root, dropdown_var_fasta, *dropdown_options)
     dropdown_menu.grid(row=17, column=1, pady=10, sticky="w")
 
+    # Help button
+    label = tk.Label(root, text="BOLDigger:", font=font.Font(weight="bold"))
+    label.grid(row=19, column=0, pady=10)
+    help_button = tk.Button(root, text="Github readme", command=open_boldigger_help)
+    help_button.grid(row=19, column=1, columnspan=2, pady=10, sticky="w")
+
     # Create a submit button
     submit_button = tk.Button(root, text="Save & Submit", command=lambda: save_and_submit(project_folder, current_project, bold_databases, operating_modes))
-    submit_button.grid(row=19, column=1, columnspan=2, pady=10, sticky="w")
+    submit_button.grid(row=20, column=1, columnspan=2, pady=10, sticky="w")
 
     # Create a return button
     return_button = tk.Button(root, text="Return", command=lambda: cancel(project_folder, current_project, root))
-    return_button.grid(row=20, column=1, columnspan=2, pady=10, sticky="w")
+    return_button.grid(row=21, column=1, columnspan=2, pady=10, sticky="w")
 
     # Run the application
     root.mainloop()
