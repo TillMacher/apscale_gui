@@ -15,6 +15,7 @@ import apscale.f_denoising as f_denoising
 import apscale.g_generate_esv_table as g_generate_esv_table
 from apscale_blast.a_blastn import main as a_blastn
 from apscale_blast.b_filter import main as b_filter
+from apscale_blast.__main__ import organism_filter as organism_filter
 import multiprocessing
 import boldigger3.id_engine as id_engine
 import boldigger3.additional_data_download as additional_data_download
@@ -24,6 +25,7 @@ from update_checker import update_check
 import importlib.metadata
 import platform
 from ete3 import NCBITaxa, Tree
+import datetime
 
 ## check for updates
 def check_package_update(package_name):
@@ -558,6 +560,8 @@ def create_local_blastn_window(project_folder, current_project):
             'task': dropdown_var_task.get(),
             'headless': "True",
             'query_fasta': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get())),
+            'organism_mask': organism_filter_entry.get(),
+            'include_uncultured': dropdown_var_uncultured.get(),
             'out': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get().replace('.fasta', '_blastn')))
         }
 
@@ -566,6 +570,25 @@ def create_local_blastn_window(project_folder, current_project):
             updated_data['db_folder'] = 'remote'
         else:
             updated_data['db_folder'] = str(Path(project_folder).joinpath('apscale_databases', dropdown_var_dbs.get()))
+
+        ## convert to True False
+        include_uncultured = bool(updated_data['include_uncultured'])
+
+        ## db
+        organism_mask = []
+        if updated_data['db_folder'] == 'remote':
+            for organism in updated_data['organism_mask'].replace(' ', '').split(','):
+                organism_mask.append(organism_filter(organism))
+
+            if len(organism_mask) != 0:
+                print(
+                    f'{datetime.datetime.now().strftime("%H:%M:%S")}: Filtering remote blast for {len(organism_mask)} organism(s):')
+                for mask in organism_mask:
+                    if 'not found!' in mask:
+                        print(f'  Error: Please check your input: {mask}\n')
+                        return
+                    else:
+                        print(f'  {mask}')
 
         continue_blast = a_blastn('blastn',
                  updated_data['query_fasta'], # -query_fasta
@@ -578,6 +601,8 @@ def create_local_blastn_window(project_folder, current_project):
                  'No', # -masking
                  updated_data['headless'], # -headless
                  False, # -gui
+                 organism_mask,
+                 include_uncultured
                  )
 
         # create thresholds
@@ -623,42 +648,42 @@ def create_local_blastn_window(project_folder, current_project):
     tk.Label(root, text="Cores:").grid(row=2, column=0, sticky="e")
     cores_entry = tk.Entry(root)
     cores_entry.insert(0, data['cores'])
-    cores_entry.grid(row=2, column=1)
+    cores_entry.grid(row=2, column=1, sticky="w")
 
     tk.Label(root, text="Subset Size:").grid(row=3, column=0, sticky="e")
     subset_size_entry = tk.Entry(root)
     subset_size_entry.insert(0, data['subset_size'])
-    subset_size_entry.grid(row=3, column=1)
+    subset_size_entry.grid(row=3, column=1, sticky="w")
 
     tk.Label(root, text="Max Target Seqs:").grid(row=4, column=0, sticky="e")
     max_target_seqs_entry = tk.Entry(root)
     max_target_seqs_entry.insert(0, data['max_target_seqs'])
-    max_target_seqs_entry.grid(row=4, column=1)
+    max_target_seqs_entry.grid(row=4, column=1, sticky="w")
 
     tk.Label(root, text="Species:").grid(row=5, column=0, sticky="e")
     species_entry = tk.Entry(root)
     species_entry.insert(0, data['Species'])
-    species_entry.grid(row=5, column=1)
+    species_entry.grid(row=5, column=1, sticky="w")
 
     tk.Label(root, text="Genus:").grid(row=6, column=0, sticky="e")
     genus_entry = tk.Entry(root)
     genus_entry.insert(0, data['Genus'])
-    genus_entry.grid(row=6, column=1)
+    genus_entry.grid(row=6, column=1, sticky="w")
 
     tk.Label(root, text="Family:").grid(row=7, column=0, sticky="e")
     family_entry = tk.Entry(root)
     family_entry.insert(0, data['Family'])
-    family_entry.grid(row=7, column=1)
+    family_entry.grid(row=7, column=1, sticky="w")
 
     tk.Label(root, text="Order:").grid(row=8, column=0, sticky="e")
     order_entry = tk.Entry(root)
     order_entry.insert(0, data['Order'])
-    order_entry.grid(row=8, column=1)
+    order_entry.grid(row=8, column=1, sticky="w")
 
     tk.Label(root, text="Class:").grid(row=9, column=0, sticky="e")
     class_entry = tk.Entry(root)
     class_entry.insert(0, data['Class'])
-    class_entry.grid(row=9, column=1)
+    class_entry.grid(row=9, column=1, sticky="w")
 
     # Create a folder selection button
     label = tk.Label(root, text="Select task:", font=font.Font(weight="bold"))
@@ -695,36 +720,55 @@ def create_local_blastn_window(project_folder, current_project):
     dropdown_menu.grid(row=18, column=1, pady=10, sticky="w")
 
     ## Latest dbs button
-    label = tk.Label(root, text="Blastn:", font=font.Font(weight="bold"))
+    label = tk.Label(root, text="Local Blastn:", font=font.Font(weight="bold"))
     label.grid(row=19, column=0, pady=10)
     help_button2 = tk.Button(root, text="Database download", command=open_lastest_dbs)
     help_button2.grid(row=19, column=1, columnspan=2, pady=10, sticky="w")
 
     ## Help button
-    label = tk.Label(root, text="Blastn:", font=font.Font(weight="bold"))
+    label = tk.Label(root, text="Local Blastn:", font=font.Font(weight="bold"))
     label.grid(row=20, column=0, pady=10)
     help_button2 = tk.Button(root, text="Github readme", command=open_blast_help)
     help_button2.grid(row=20, column=1, columnspan=2, pady=10, sticky="w")
 
     # Create an update taxonomy button
-    label = tk.Label(root, text="Remote blastn:", font=font.Font(weight="bold"))
+    label = tk.Label(root, text="Remote Blastn:", font=font.Font(weight="bold"))
     label.grid(row=21, column=0, pady=10)
     taxonomy_button = tk.Button(root, text="Update taxid database", command=update_ncbi_taxonomy)
     taxonomy_button.grid(row=21, column=1, columnspan=2, pady=10, sticky="w")
 
-    ## Help button
-    label = tk.Label(root, text="Remote blastn:", font=font.Font(weight="bold"))
+    # Create organism filter dropdown
+    label = tk.Label(root, text="Remote Blastn:", font=font.Font(weight="bold"))
     label.grid(row=22, column=0, pady=10)
+    label = tk.Label(root, text="Organism filter")
+    label.grid(row=22, column=1, sticky="w")
+    organism_filter_entry = tk.Entry(root)
+    organism_filter_entry.insert(0, 'Eukaryota')
+    organism_filter_entry.grid(row=22, column=1, padx=120, sticky="w")
+
+    # Create selector for uncultured filter
+    label = tk.Label(root, text="Remote Blastn:", font=font.Font(weight="bold"))
+    label.grid(row=23, column=0, pady=10)
+    label = tk.Label(root, text="Filter uncultured")
+    label.grid(row=23, column=1, sticky="w")
+    dropdown_var_uncultured = tk.StringVar(value="True")
+    dropdown_options = ["True", "False"]
+    dropdown_menu = tk.OptionMenu(root, dropdown_var_uncultured, *dropdown_options)
+    dropdown_menu.grid(row=23, column=1, padx=120, sticky="w")
+
+    ## Help button
+    label = tk.Label(root, text="Remote Blastn:", font=font.Font(weight="bold"))
+    label.grid(row=24, column=0, pady=10)
     help_button1 = tk.Button(root, text="Github readme", command=open_remote_blast_help)
-    help_button1.grid(row=22, column=1, columnspan=2, pady=10, sticky="w")
+    help_button1.grid(row=24, column=1, columnspan=2, pady=10, sticky="w")
 
     # Create a submit button
     submit_button = tk.Button(root, text="Save & Submit", command=lambda: save_and_submit(project_folder, current_project))
-    submit_button.grid(row=23, column=1, columnspan=2, pady=10, sticky="w")
+    submit_button.grid(row=25, column=1, columnspan=2, pady=10, sticky="w")
 
     # Create a return button
     return_button = tk.Button(root, text="Return", command=lambda: cancel(project_folder, current_project, root))
-    return_button.grid(row=24, column=1, columnspan=2, pady=10, sticky="w")
+    return_button.grid(row=26, column=1, columnspan=2, pady=10, sticky="w")
 
     # Run the application
     root.mainloop()
@@ -743,6 +787,7 @@ def create_boldigger3_window(project_folder, current_project):
             'Order': int(order_entry.get()),
             'Class': int(class_entry.get()),
             'query_fasta': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get())),
+            'organism_filter': organism_filter_entry.get()
         }
 
         ## collect thresholds
