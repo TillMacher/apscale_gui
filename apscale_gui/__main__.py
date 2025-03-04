@@ -13,6 +13,7 @@ import apscale.d_quality_filtering as d_quality_filtering
 import apscale.e_dereplication as e_dereplication
 import apscale.f_denoising as f_denoising
 import apscale.g_generate_esv_table as g_generate_esv_table
+import apscale.h_merge_replicates_remove_negative_controls as h_merge_replicates_remove_negative_controls
 from apscale_blast.a_blastn import main as a_blastn
 from apscale_blast.b_filter import main as b_filter
 from apscale_blast.__main__ import organism_filter as organism_filter
@@ -26,6 +27,10 @@ import importlib.metadata
 import platform
 from ete3 import NCBITaxa, Tree
 import datetime
+
+# For debugging
+# project_folder = Path('/Users/tillmacher/Desktop/APSCALE_projects')
+# current_project = Path('/Users/tillmacher/Desktop/APSCALE_projects/test_v3_apscale')
 
 ## check for updates
 def check_package_update(package_name):
@@ -361,7 +366,7 @@ def load_settings_file(project_folder, current_project):
     settings_xlsx_path = Path(current_project).joinpath(settings_xlsx)
 
     data = {}
-    for sheet in ['0_general_settings', '3_PE_merging', '4_primer_trimming', '5_quality_filtering', '6_denoising']:
+    for sheet in ['0_general_settings', '3_PE_merging', '4_primer_trimming', '5_quality_filtering', '6_denoising', '7_replicate_negative_controls']:
         settings_df = pd.read_excel(settings_xlsx_path, sheet_name=sheet).fillna('')
         res = {i:str(settings_df[i].values.tolist()[0]) for i in settings_df.columns}
         data = data | res
@@ -401,10 +406,16 @@ def run_apscale(project_folder, current_project, updated_data):
         df.to_excel(writer, sheet_name='5_quality_filtering', index=False)
 
         # Denoising
-        data = [[float(updated_data['alpha']), int(updated_data['minsize'])]]
-        cols = ['alpha', 'minsize']
+        data = [[float(updated_data['alpha']), int(updated_data['minsize']), updated_data['to excel']]]
+        cols = ['alpha', 'minsize', 'to excel']
         df = pd.DataFrame(data, columns=cols)
         df.to_excel(writer, sheet_name='6_denoising', index=False)
+
+        # Replicate merging & Negative control subtraction
+        data = [[updated_data['merge replicates'], updated_data['replicate delimiter'], updated_data['minimum replicate presence'], updated_data['substract negative controls'], updated_data['negative control prefix']]]
+        cols = ['merge replicates', 'replicate delimiter', 'minimum replicate presence', 'substract negative controls', 'negative control prefix']
+        df = pd.DataFrame(data, columns=cols)
+        df.to_excel(writer, sheet_name='7_replicate_negative_controls', index=False)
 
     ## also collect the task to perform
     task = updated_data['dropdown']
@@ -429,117 +440,114 @@ def run_apscale(project_folder, current_project, updated_data):
         f_denoising.main(current_project)
     if task == "generate ESV table":
         g_generate_esv_table.main(current_project)
+    if task == 'merge replicates & remove negative controls':
+        h_merge_replicates_remove_negative_controls.main(current_project)
 
-## apscale main window
+# create apscale main window
 def create_apscale_main_window(project_folder, current_project):
-
-    def save_and_submit(project_folder, current_project):
-        updated_data = {
-            "cores to use": entry1.get(),
-            "compression level": entry2.get(),
-            "maxdiffpct": entry3.get(),
-            "maxdiffs": entry4.get(),
-            "minovlen": entry5.get(),
-            "P5 Primer (5' - 3')": entry6.get(),
-            "P7 Primer (5' - 3')": entry7.get(),
-            "anchoring": entry8.get(),
-            "maxEE": entry9.get(),
-            "min length": entry10.get(),
-            "max length": entry11.get(),
-            "alpha": entry12.get(),
-            "minsize": entry13.get(),
-            "dropdown": dropdown_var.get()
-        }
+    def save_and_submit():
+        updated_data = {label: entry.get() for label, entry in zip(labels, entries)}
+        updated_data["dropdown"] = dropdown_var.get()
         run_apscale(project_folder, current_project, updated_data)
 
     root = tk.Tk()
     root.title("Apscale")
     data = load_settings_file(project_folder, current_project)
 
-    # Create labels and entry fields for each category
     labels = [
         "cores to use", "compression level",
         "maxdiffpct", "maxdiffs", "minovlen",
         "P5 Primer (5' - 3')", "P7 Primer (5' - 3')", "anchoring",
         "maxEE", "min length", "max length",
-        "alpha", "minsize"
+        "alpha", "minsize", "to excel",
+        "merge replicates", "replicate delimiter", "minimum replicate presence",
+        "substract negative controls", "negative control prefix"
     ]
+
+    categories = [
+        ("General settings", labels[:2]),
+        ("PE merging", labels[2:5]),
+        ("Primer trimming", labels[5:8]),
+        ("Quality filtering", labels[8:11]),
+        ("Denoising", labels[11:14]),
+        ("Replicate merging", labels[14:17]),
+        ("Negative controls", labels[17:])
+    ]
+
     default_values = list(data.values())
+
+    # Title
+    tk.Label(root, text="Raw data processing", font=font.Font(weight="bold")).grid(row=0, column=0, columnspan=4,
+                                                                                   pady=10)
+
     entries = []
-    entry_vars = []
+    row_idx = 1
 
-    # Add welcome text
-    label = tk.Label(root, text="Raw data processing", font=font.Font(weight="bold"))
-    label.grid(row=0, column=0, columnspan=2, pady=10)
+    for i in range(0, len(categories) - 1, 2):
+        category1, labels1 = categories[i]
+        category2, labels2 = categories[i + 1]
 
-    # Headers and input fields with reduced spacing
-    # General settings (category 1)
-    tk.Label(root, text="General settings", font=font.Font(weight="bold")).grid(row=2, column=0, columnspan=2, pady=(10, 5))
-    for i, (label, default_value) in enumerate(zip(labels[:2], default_values[:2]), start=3):
-        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
-        entry_var = tk.StringVar(value=default_value)
+        tk.Label(root, text=category1, font=font.Font(weight="bold")).grid(row=row_idx, column=0, columnspan=2,
+                                                                           pady=(10, 5), sticky="w")
+        tk.Label(root, text=category2, font=font.Font(weight="bold")).grid(row=row_idx, column=2, columnspan=2,
+                                                                           pady=(10, 5), sticky="w")
+        row_idx += 1
+
+        max_rows = max(len(labels1), len(labels2))
+
+        for j in range(max_rows):
+            if j < len(labels1):
+                label1 = labels1[j]
+                tk.Label(root, text=label1).grid(row=row_idx, column=0, padx=10, pady=2, sticky="w")
+                entry_var1 = tk.StringVar(value=data.get(label1, ""))
+                entry1 = tk.Entry(root, textvariable=entry_var1)
+                entry1.grid(row=row_idx, column=1, padx=10, pady=2, sticky="w")
+                entries.append(entry1)
+
+            if j < len(labels2):
+                label2 = labels2[j]
+                tk.Label(root, text=label2).grid(row=row_idx, column=2, padx=10, pady=2, sticky="w")
+                entry_var2 = tk.StringVar(value=data.get(label2, ""))
+                entry2 = tk.Entry(root, textvariable=entry_var2)
+                entry2.grid(row=row_idx, column=3, padx=10, pady=2, sticky="w")
+                entries.append(entry2)
+
+            row_idx += 1
+
+    # Last category spans the width
+    category, category_labels = categories[-1]
+    tk.Label(root, text=category, font=font.Font(weight="bold")).grid(row=row_idx, column=0, columnspan=2, pady=(10, 5),
+                                                                      sticky="w")
+    row_idx += 1
+    for label in category_labels:
+        tk.Label(root, text=label).grid(row=row_idx, column=0, padx=10, pady=2, sticky="w")
+        entry_var = tk.StringVar(value=data.get(label, ""))
         entry = tk.Entry(root, textvariable=entry_var)
-        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
+        entry.grid(row=row_idx, column=1, padx=10, pady=2, sticky="w")
         entries.append(entry)
+        row_idx += 1
 
-    # PE merging (category 2)
-    tk.Label(root, text="PE merging", font=font.Font(weight="bold")).grid(row=5, column=0, columnspan=2, pady=(10, 5))
-    for i, (label, default_value) in enumerate(zip(labels[2:5], default_values[2:5]), start=6):
-        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
-        entry_var = tk.StringVar(value=default_value)
-        entry = tk.Entry(root, textvariable=entry_var)
-        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
-        entries.append(entry)
-
-    # Primer trimming (category 3)
-    tk.Label(root, text="Primer trimming", font=font.Font(weight="bold")).grid(row=9, column=0, columnspan=2, pady=(10, 5))
-    for i, (label, default_value) in enumerate(zip(labels[5:8], default_values[5:8]), start=10):
-        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
-        entry_var = tk.StringVar(value=default_value)
-        entry = tk.Entry(root, textvariable=entry_var)
-        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
-        entries.append(entry)
-
-    # Quality filtering (category 4)
-    tk.Label(root, text="Quality filtering", font=font.Font(weight="bold")).grid(row=13, column=0, columnspan=2, pady=(10, 5))
-    for i, (label, default_value) in enumerate(zip(labels[8:11], default_values[8:11]), start=14):
-        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
-        entry_var = tk.StringVar(value=default_value)
-        entry = tk.Entry(root, textvariable=entry_var)
-        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
-        entries.append(entry)
-
-    # Denoising (category 5)
-    tk.Label(root, text="Denoising", font=font.Font(weight="bold")).grid(row=18, column=0, columnspan=2, pady=(10, 5))
-    for i, (label, default_value) in enumerate(zip(labels[11:], default_values[11:]), start=19):
-        tk.Label(root, text=label).grid(row=i, column=0, padx=10, pady=(2, 2), sticky="w")
-        entry_var = tk.StringVar(value=default_value)
-        entry = tk.Entry(root, textvariable=entry_var)
-        entry.grid(row=i, column=1, padx=10, pady=(2, 2), sticky="w")
-        entries.append(entry)
-
-    entry1, entry2, entry3, entry4, entry5, entry6, entry7, entry8, entry9, entry10, entry11, entry12, entry13 = entries
-
-    # Create a dropdown menu
-    tk.Label(root, text="Select task:", font=font.Font(weight="bold")).grid(row=23, column=0, pady=10)
+    # Dropdown menu
+    tk.Label(root, text="Select task:", font=font.Font(weight="bold")).grid(row=row_idx, column=0, pady=10)
     dropdown_var = tk.StringVar(value="Run apscale")
     dropdown_options = ["Run apscale", "PE merging", "primer trimming", "quality filtering",
-                        "dereplication", "denoising", "generate ESV table"]
-    dropdown_menu = tk.OptionMenu(root, dropdown_var, *dropdown_options)
-    dropdown_menu.grid(row=23, column=1, pady=10, sticky="w")
+                        "dereplication", "denoising", "generate ESV table",
+                        "merge replicates & remove negative controls"]
+    tk.OptionMenu(root, dropdown_var, *dropdown_options).grid(row=row_idx, column=1, pady=10, sticky="w")
+    row_idx += 1
 
-    ## Help button
-    label = tk.Label(root, text="Apscale:", font=font.Font(weight="bold"))
-    label.grid(row=24, column=0, pady=10)
-    help_button = tk.Button(root, text="Github readme", command=open_apscale_help)
-    help_button.grid(row=24, column=1, columnspan=2, pady=10, sticky="w")
+    # Help button
+    tk.Label(root, text="Apscale:", font=font.Font(weight="bold")).grid(row=row_idx, column=0, pady=10)
+    tk.Button(root, text="Github readme", command=open_apscale_help).grid(row=row_idx, column=1, pady=10, sticky="w")
+    row_idx += 1
 
-    # Submit and return buttons
-    submit_button = tk.Button(root, text="Save & submit", command=lambda: save_and_submit(project_folder, current_project))
-    submit_button.grid(row=25, column=1, columnspan=2, pady=10, sticky="w")
-
-    return_button = tk.Button(root, text="Return", command=lambda: cancel(project_folder, current_project, root))
-    return_button.grid(row=26, column=1, columnspan=2, pady=10, sticky="w")
+    # Submit & return buttons
+    tk.Button(root, text="Save & submit", command=save_and_submit).grid(row=row_idx, column=1, pady=10, sticky="w")
+    row_idx += 1
+    tk.Button(root, text="Return", command=lambda: cancel(project_folder, current_project, root)).grid(row=row_idx,
+                                                                                                       column=1,
+                                                                                                       pady=10,
+                                                                                                       sticky="w")
 
     root.mainloop()
 
@@ -558,11 +566,11 @@ def create_local_blastn_window(project_folder, current_project):
             'Order': int(order_entry.get()),
             'Class': int(class_entry.get()),
             'task': dropdown_var_task.get(),
-            'headless': "True",
-            'query_fasta': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get())),
+            'headless': True,
+            'query_fasta': str(Path(current_project).joinpath(dropdown_var_fasta.get())),
             'organism_mask': organism_filter_entry.get(),
             'include_uncultured': dropdown_var_uncultured.get(),
-            'out': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get().replace('.fasta', '_blastn')))
+            'out': str(Path(current_project).joinpath(dropdown_var_fasta.get().replace('.fasta', '_blastn')))
         }
 
         # add database
@@ -696,11 +704,11 @@ def create_local_blastn_window(project_folder, current_project):
     # Select fasta file
     label = tk.Label(root, text="Select query fasta:", font=font.Font(weight="bold"))
     label.grid(row=17, column=0, pady=10)
-    all_fasta_files = glob.glob(str(Path(current_project).joinpath('8_esv_table/*.fasta')))
+    all_fasta_files = glob.glob(str(Path(current_project).joinpath('8_esv_table/*.fasta'))) + glob.glob(str(Path(current_project).joinpath('9_replicate_negative_control_processing/*.fasta')))
     if all_fasta_files == []:
         fasta_names = ['No files available.']
     else:
-        fasta_names = [Path(i).name for i in all_fasta_files]
+        fasta_names = [f"{Path(Path(i).parent).name}/{Path(i).name}" for i in all_fasta_files]
     dropdown_var_fasta = tk.StringVar(value=fasta_names[0])
     dropdown_options = fasta_names
     dropdown_menu = tk.OptionMenu(root, dropdown_var_fasta, *dropdown_options)
@@ -786,8 +794,7 @@ def create_boldigger3_window(project_folder, current_project):
             'Family': int(family_entry.get()),
             'Order': int(order_entry.get()),
             'Class': int(class_entry.get()),
-            'query_fasta': str(Path(current_project).joinpath('8_esv_table', dropdown_var_fasta.get())),
-            'organism_filter': organism_filter_entry.get()
+            'query_fasta': str(Path(current_project).joinpath(dropdown_var_fasta.get())),
         }
 
         ## collect thresholds
@@ -876,11 +883,11 @@ def create_boldigger3_window(project_folder, current_project):
     # Select fasta file
     label = tk.Label(root, text="Select query fasta:", font=font.Font(weight="bold"))
     label.grid(row=17, column=0, pady=10)
-    all_fasta_files = glob.glob(str(Path(current_project).joinpath('8_esv_table/*.fasta')))
+    all_fasta_files = glob.glob(str(Path(current_project).joinpath('8_esv_table/*.fasta'))) + glob.glob(str(Path(current_project).joinpath('9_replicate_negative_control_processing/*.fasta')))
     if all_fasta_files == []:
         fasta_names = ['No files available.']
     else:
-        fasta_names = [Path(i).name for i in all_fasta_files]
+        fasta_names = [f"{Path(Path(i).parent).name}/{Path(i).name}" for i in all_fasta_files]
     dropdown_var_fasta = tk.StringVar(value=fasta_names[0])
     dropdown_var_fasta = tk.StringVar(value=fasta_names[0])
     dropdown_options = fasta_names
