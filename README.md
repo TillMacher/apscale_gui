@@ -134,5 +134,7 @@ When using APSCALE, please cite the following:
 * [BOLDigger](https://mbmg.pensoft.net/article/53535/)
 * [The specific database for local BLASTn search](https://github.com/TillMacher/apscale_blast?tab=readme-ov-file#available-databases).
 
+### Workshop data
+[File link](https://seafile.rlp.net/d/d20461f8ce214b9887ae/)
 
 
