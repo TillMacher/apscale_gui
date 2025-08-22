@@ -423,6 +423,13 @@ def run_apscale_blast(project_folder, available_fasta_files, available_databases
         for organism in st.session_state['organism_filter'].replace(' ', '').split(','):
             organism_mask.append(organism_filter(organism))
 
+    if ' ' in str(database):
+        st.error(
+            "Invalid database path: it contains spaces.\n"
+            "blastn cannot handle paths with whitespace.\n"
+            "Please choose a path without spaces and try again.")
+        return
+
     a_blastn(
         'blastn',
         query_fasta,
@@ -794,7 +801,7 @@ def main():
                 read_settings_file(settings_xlsx, settings_dfs)
 
                 ############################################################################################################
-                st.subheader('Settings')
+                st.subheader('APSCALE4')
                 # General settings
                 with st.expander("⚙️ General settings", expanded=False):
                     col1, col2 = st.columns(2)
@@ -841,7 +848,10 @@ def main():
                     st.text_input(label='alpha', key='alpha')
                 with col3:
                     st.selectbox(label='Threshold type', options=['absolute', 'relative', 'power law'], key='threshold type', help=f_denoising_threshold_help)
-                    st.text_input(label='Size threshold [absolute nr/%]', key='size threshold [absolute nr / %]')
+                    if st.session_state['threshold type'] == 'power law':
+                        st.info('Power-law provides a data-driven threshold.')
+                    else:
+                        st.text_input(label='Size threshold [absolute nr / %]', key='size threshold [absolute nr / %]')
                 # SWARM Clustering
                 with st.expander("🐝 SWARM Clustering", expanded=False):
                     st.selectbox(label='Perform SWARM clustering', options=[True, False], key='perform swarm clustering', help=g_swarm_clustering_help)
