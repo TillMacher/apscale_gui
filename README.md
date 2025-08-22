@@ -44,7 +44,7 @@ Note: APSCALE and APSCALE GUI requires python3.12 or higher!
 
 ## Tutorial
 
-Creating a New Project
+### Setup
 
 1.	Create a new folder on your computer (e.g., on your desktop) and name it something like “APSCALE_projects.”
 
@@ -63,6 +63,8 @@ Creating a New Project
 6. *Important note: Use the "Refresh files and folders" button if directories or folders do not yet show up!*
 
 7.	Next, press the button below to create the database and tagging scheme folders in your "APSCALE_projects".
+
+### New projects
 
 8.	To create a first project, simply type a name in the text field below and press the button.
 
