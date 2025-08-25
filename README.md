@@ -38,7 +38,11 @@ To update APSCALE GUI to the latest version, use:
 
 `pip install --upgrade apscale_gui`
 
-Note: APSCALE and APSCALE GUI requires python3.12 or higher!
+Important note:
+
+* APSCALE and APSCALE GUI requires python3.12 or higher!
+* If possible, use the apscale4 environment.
+* Apscale projects created with apscale v3 or older are not compatible with apscale v4. Please create a new project.
 
 ---
 
