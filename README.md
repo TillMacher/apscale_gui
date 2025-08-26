@@ -166,4 +166,5 @@ When using APSCALE, please cite the following:
 * [VSEARCH](https://peerj.com/articles/2584/)
 * [Cutadapt](https://journal.embnet.org/index.php/embnetjournal/article/view/200)
 * [BOLDigger](https://mbmg.pensoft.net/article/53535/)
+* [BLAST+](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-10-421)
 * [The specific database for local BLASTn search](https://github.com/TillMacher/apscale_blast?tab=readme-ov-file#available-databases).
