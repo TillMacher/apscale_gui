@@ -138,7 +138,7 @@ Settings_My_new_project.xlsx
 
 18. The sequencing results can now be taxonomically assigned using [APSCALE-blast](https://github.com/TillMacher/apscale_blast).
 
-19. APSCALE-blast is based on blast+ and performs the taxonomic assignments against [pre-compiled local databases](https://seafile.rlp.net/d/474b9682a5cb4193a6ad/). These can be indivudally downloaded or batch-downloaded and extracted using the "Download All Latest Databases" button. The APSCALE databases are stored in the folder "APSCALE_projects/APSCALE_databases".
+19. APSCALE-blast is based on blast+ and performs the taxonomic assignments against [pre-compiled local databases](https://seafile.rlp.net/d/c172d076de1e4c45b594/). These can be indivudally downloaded or batch-downloaded and extracted using the "Download All Latest Databases" button. The APSCALE databases are stored in the folder "APSCALE_projects/APSCALE_databases".
 
 20. To perform the taxonomic assignment, simply select the .fasta file and the database to begin the blast search.
 
