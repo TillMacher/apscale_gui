@@ -5,6 +5,7 @@ import streamlit as st
 from streamlit_file_browser import st_file_browser
 import importlib
 from update_checker import update_check
+from update_checker import UpdateChecker
 from pathlib import Path
 import glob
 import pandas as pd
@@ -22,6 +23,11 @@ from playwright.sync_api import sync_playwright
 import zipfile
 import importlib.metadata
 import subprocess
+import asyncio
+import sys
+import datetime, sys, getpass, requests_html, duckdb
+from tqdm import tqdm
+from stqdm import stqdm
 
 # demultiplexer2
 from demultiplexer2.create_primerset import create_primerset
@@ -48,9 +54,11 @@ from apscale_blast.__main__ import organism_filter as organism_filter
 
 # BOLDigger3
 from boldigger3 import id_engine
-from boldigger3 import metadata_download
 from boldigger3 import add_metadata
 from boldigger3 import select_top_hit
+from boldigger3 import download_database
+import requests
+
 
 # help texts
 n_cores_help = """
@@ -126,6 +134,21 @@ information about sequences, groups, samples, and read counts. The read data sto
 large datasets—potentially billions of sequences—at high speed, without requiring the entire dataset to be loaded into
 memory. This makes it especially useful for scaling up analyses.
                     """
+
+def check_package_update_disp(packages):
+    for pkg in packages:
+        installed_version = importlib.metadata.version(pkg)
+        checker = UpdateChecker()
+        result = checker.check(pkg, installed_version)
+        if result:
+            st.sidebar.info(f'{result}\n\n$ pip install --upgrade {pkg}')
+
+def get_package_versions_disp(pkg):
+    try:
+        version = importlib.metadata.version(pkg)
+        return version
+    except importlib.metadata.PackageNotFoundError:
+        return
 
 def check_dependencies(tools=["cutadapt", "vsearch", "swarm", "blastn"]):
     missing = []
@@ -316,22 +339,18 @@ def move_raw_files(project_folder):
 def read_settings_file(settings_xlsx, settings_dfs):
     for sheet_name, df in settings_dfs.items():
         for col in df.columns:
-            if col not in st.session_state:  # only initialize if missing
-                if len(df[col]) == 1 and pd.notna(df[col].iloc[0]):
-                    val = df[col].iloc[0]
-
-                    # Convert boolean-like strings to actual bool
-                    if isinstance(val, str) and val.lower() in [True, False]:
-                        val = val.lower() == 'true'
-                    else:
-                        # Everything else -> string
-                        val = str(val)
-
-                    st.session_state[col] = val
-
+            if len(df[col]) == 1 and pd.notna(df[col].iloc[0]):
+                val = df[col].iloc[0]
+                # Convert boolean-like strings to actual bool
+                if isinstance(val, str) and val.lower() in [True, False]:
+                    val = val.lower() == 'true'
                 else:
-                    # Multiple values: replace NaN with '' and convert all to strings
-                    st.session_state[col] = df[col].fillna('').astype(str).tolist()
+                    # Everything else -> string
+                    val = str(val)
+                st.session_state[col] = val
+            else:
+                # Multiple values: replace NaN with '' and convert all to strings
+                st.session_state[col] = df[col].fillna('').astype(str).tolist()
 
 def update_settings_file(settings_xlsx, settings_dfs):
     # Create a dict to hold updated DataFrames
@@ -359,10 +378,31 @@ def update_settings_file(settings_xlsx, settings_dfs):
 
     st.success(f"Settings updated and saved to {settings_xlsx}")
 
-def run_apscale(task, project_folder):
+def run_apscale(task, project_folder, modules_to_run):
 
     st.info('Starting apscale analysis! Please refer to the terminal for live outputs!')
     print('')
+
+    if modules_to_run != []:
+        for task in modules_to_run:
+            if task == "PE-merging":
+                b_pe_merging.main(project_folder)
+            elif task == "Primer-trimming":
+                c_primer_trimming.main(project_folder)
+            elif task == "Quality-filtering":
+                d_quality_filtering.main(project_folder)
+            elif task == "Dereplication":
+                e_dereplication.main(project_folder)
+            elif task == "Denoising":
+                f_denoising.main(project_folder)
+            elif task == "SWARM clustering":
+                g_swarm_clustering.main(project_folder)
+            elif task == "Replicate merging":
+                h_replicate_merging.main(project_folder)
+            elif task == "NC removal":
+                i_nc_removal.main(project_folder)
+            elif task == "Generate read table":
+                j_generate_read_table.main(project_folder)
 
     if task == "Run apscale (basic mode)":
         b_pe_merging.main(project_folder)
@@ -372,7 +412,7 @@ def run_apscale(task, project_folder):
         f_denoising.main(project_folder)
         g_swarm_clustering.main(project_folder)
         j_generate_read_table.main(project_folder)
-    if task == "Run apscale (complete mode)":
+    elif task == "Run apscale (complete mode)":
         b_pe_merging.main(project_folder)
         c_primer_trimming.main(project_folder)
         d_quality_filtering.main(project_folder)
@@ -382,26 +422,28 @@ def run_apscale(task, project_folder):
         h_replicate_merging.main(project_folder)
         i_nc_removal.main(project_folder)
         j_generate_read_table.main(project_folder)
-    if task == "PE-merging":
+    elif task == "PE-merging":
         b_pe_merging.main(project_folder)
-    if task == "Primer-trimming":
+    elif task == "Primer-trimming":
         c_primer_trimming.main(project_folder)
-    if task == "Quality-filtering":
+    elif task == "Quality-filtering":
         d_quality_filtering.main(project_folder)
-    if task == "Dereplication":
+    elif task == "Dereplication":
         e_dereplication.main(project_folder)
-    if task == "Denoising":
+    elif task == "Denoising":
         f_denoising.main(project_folder)
-    if task == "SWARM clustering":
+    elif task == "SWARM clustering":
         g_swarm_clustering.main(project_folder)
-    if task == "Replicate merging":
+    elif task == "Replicate merging":
         h_replicate_merging.main(project_folder)
-    if task == "NC removal":
+    elif task == "NC removal":
         i_nc_removal.main(project_folder)
-    if task == "Generate read table":
+    elif task == "Generate read table":
         j_generate_read_table.main(project_folder)
 
     st.success('Finished apscale analysis!')
+    print('')
+    print('Finished apscale analysis!')
     print('')
 
 def run_apscale_blast(project_folder, available_fasta_files, available_databases):
@@ -409,19 +451,10 @@ def run_apscale_blast(project_folder, available_fasta_files, available_databases
     st.info('Starting blastn! Please refer to the terminal for live outputs!')
     print('')
 
-    if st.session_state['database'] != 'remote':
-        database = str(available_databases[st.session_state['database']])
-    else:
-        database = 'remote'
+    database = str(available_databases[st.session_state['database']])
     query_fasta = str(available_fasta_files[st.session_state['query_fasta']])
-
     output_folder = project_folder / '11_read_table' / 'data' / f'blastn_{Path(query_fasta).name.replace(".fasta", "")}'
     os.makedirs(output_folder, exist_ok=True)
-
-    organism_mask = []
-    if database == 'remote':
-        for organism in st.session_state['organism_filter'].replace(' ', '').split(','):
-            organism_mask.append(organism_filter(organism))
 
     if ' ' in str(database):
         st.error(
@@ -440,14 +473,11 @@ def run_apscale_blast(project_folder, available_fasta_files, available_databases
         int(st.session_state['subset_size']),
         int(st.session_state['max_target_seqs']),
         st.session_state['masking'],
-        st.session_state['disable_headless'],  # headless
-        organism_mask,  # organism mask
-        st.session_state['include_uncultured']  # include uncultured
     )
 
     categories = ['t_species', 't_genus', 't_family', 't_order', 't_class']
     thresholds = ','.join([str(st.session_state[i]) for i in categories])
-    b_filter(output_folder, database, thresholds, str(st.session_state['n_cores']))
+    b_filter(output_folder, database, thresholds, str(st.session_state['n_cores']), st.session_state["filter_mode"], st.session_state['rating_range'], st.session_state['sim_range'])
 
     st.success('Finished blastn!')
     print('')
@@ -494,6 +524,9 @@ def flatten_zip_files(output_dir):
             folder.rmdir()
             print(f"Removed empty folder {folder}")
 
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 def download_seafile_zip(public_url, output_dir="downloads"):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -527,7 +560,117 @@ def download_seafile_zip(public_url, output_dir="downloads"):
 
     st.success(f"Finished the extraction of {len(list(output_dir.glob('*')))} databases!")
 
-def run_boldigger3(available_fasta_files, bold_modes, bold_databases):
+class DownloadProgressBar(tqdm):
+    def update_to(self, b=1, bsize=1, tsize=None):
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)
+
+def run_boldigger3_db_download(output_dir, user_name, password):
+
+    """Download the latest BOLD public database and save it as a DuckDB file.
+
+    Logs into BOLD Systems, checks whether the local database is already up to
+    date, and if not, downloads the latest Parquet release and converts it to
+    DuckDB format.
+
+    Args:
+        output_file: Full path (including filename) for the output .ddb file.
+        user_name: BOLD Systems username.
+        password: BOLD Systems password.
+    """
+
+    # --- Login ---
+    data = {
+        "name": user_name,
+        "password": password,
+        "destination": "MAS_Management_UserConsole",
+        "loginType": "",
+    }
+
+    session = requests_html.HTMLSession()
+    session.post("https://bench.boldsystems.org/index.php/Login", data=data)
+
+    r = session.get("https://bench.boldsystems.org/index.php/datapackages/Latest")
+    log_out_text = r.html.find(".site-navigation > li:nth-child(4) > a:nth-child(1)")[0].text
+
+    if log_out_text != "Log out":
+        print(f"{datetime.datetime.now():%H:%M:%S}: Login failed, please check credentials.")
+        return
+
+    st.write(f"{datetime.datetime.now():%H:%M:%S}: Login successful, checking database status.")
+
+    # --- Check DB status ---
+    r = session.get("https://bench.boldsystems.org/index.php/datapackages/Latest")
+    button = r.html.find(
+        "div.row:nth-child(5) > div:nth-child(1) > table:nth-child(3) > tbody:nth-child(1) > tr:nth-child(4) > td:nth-child(2) > button:nth-child(1)"
+    )
+    package_id = button[0].attrs["data-package-id"]
+    data_url = button[0].attrs["data-url"]
+
+    parquet_path = output_dir / f"{package_id}.parquet"
+    database_path = output_dir / f"{package_id}.duckdb"
+
+    if database_path.is_file():
+        st.info(f"{datetime.datetime.now():%H:%M:%S}: Database is up to date.")
+        return
+
+    st.write(f"{datetime.datetime.now():%H:%M:%S}: Database does not exist or is outdated.")
+
+    # --- Download and convert ---
+    uid = session.get(f"https://bench.boldsystems.org{data_url}")
+    uid = uid.text.replace('"', "")
+    download_url = f"https://bench.boldsystems.org{data_url}&uid={uid}"
+
+    st.write(f"{datetime.datetime.now():%H:%M:%S}: Downloading latest database from {download_url}.")
+    print(f"{datetime.datetime.now():%H:%M:%S}: Downloading latest database from {download_url}.")
+    st.write(f"{datetime.datetime.now():%H:%M:%S}: Storing latest database as '{parquet_path}'.")
+    print(f"{datetime.datetime.now():%H:%M:%S}: Storing latest database as '{parquet_path}'.")
+
+    progress_bar = st.progress(0.0, text="Downloading public database...")
+    status = st.empty()
+    with requests.get(download_url, stream=True) as response:
+        response.raise_for_status()
+        total_size = int(response.headers.get("content-length", 0))
+        downloaded = 0
+        with open(parquet_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if total_size > 0:
+                        progress = min(downloaded / total_size, 1.0)
+                        progress_bar.progress(progress)
+                        status.text(f"{downloaded / 1024 ** 2:.1f} MB / {total_size / 1024 ** 2:.1f} MB")
+    progress_bar.progress(1.0)
+    status.text("Download complete.")
+
+    if database_path.is_file():
+        database_path.unlink()
+        st.write(f"{datetime.datetime.now():%H:%M:%S}: Outdated database successfully removed.")
+
+    if not parquet_path.is_file():
+        st.write(f"{datetime.datetime.now():%H:%M:%S}: Could not find '{parquet_path}'.")
+        return
+
+    st.write(f"{datetime.datetime.now():%H:%M:%S}: Building new database.")
+
+    with duckdb.connect(database_path) as con:
+        con.execute(f"""
+            CREATE TABLE bold_public
+            AS SELECT
+                processid, sex, life_stage, inst,
+                "country/ocean", identified_by,
+                identification_method, coord, nuc, marker_code
+            FROM read_parquet('{parquet_path}')
+        """)
+
+    st.success(f"{datetime.datetime.now():%H:%M:%S}: New database saved at {database_path}.")
+
+    if parquet_path.is_file():
+        parquet_path.unlink()
+
+def run_boldigger3_identification(available_fasta_files, bold_modes, bold_databases, db_path):
 
     st.info('Starting BOLDigger3! Please refer to the terminal for live outputs!')
     print('')
@@ -547,22 +690,15 @@ def run_boldigger3(available_fasta_files, bold_modes, bold_databases):
     thresholds.append(50)
 
     # Collect input values
-    query_fasta = str(available_fasta_files[st.session_state['bold_query_fasta']])
+    query_fasta = Path(str(available_fasta_files[st.session_state['bold_query_fasta']]))
     mode = bold_modes[st.session_state['bold_mode']]
     db = bold_databases[st.session_state['bold_database']]
 
-    # download the current metadata from BOLD
-    metadata_download.main()
-
     # run the id engine
-    id_engine.main(
-        query_fasta,
-        db,
-        mode,
-    )
+    id_engine.main(query_fasta, db, mode)
 
     # add additional data via the metadata
-    add_metadata.main(query_fasta)
+    add_metadata.main(query_fasta, db_path)
 
     # select the top hit
     select_top_hit.main(query_fasta, thresholds)
@@ -570,15 +706,62 @@ def run_boldigger3(available_fasta_files, bold_modes, bold_databases):
     st.success('Finished BOLDigger3!')
     print('')
 
+def merge_tables(read_table_path, taxonomy_table_path):
+    read_table_path = Path(read_table_path)
+    taxonomy_table_path = Path(taxonomy_table_path)
+    read_table_df = pd.read_excel(read_table_path).fillna('')
+    taxonomy_table_df = pd.read_excel(taxonomy_table_path).fillna('')
+
+    read_hashes = sorted(read_table_df['hash'])
+    taxonomy_hashes = sorted(taxonomy_table_df['unique ID'])
+    if read_hashes != taxonomy_hashes:
+        st.warning('Error: The hashes of the tables do not match!')
+        return
+
+    # Merge side by side by matching the hash columns
+    merged_df = taxonomy_table_df.merge(
+        read_table_df,
+        left_on='unique ID',
+        right_on='hash',
+        how='inner',
+        suffixes=('_tax', '_reads')
+    )
+
+    # Drop duplicate identifier column (optional)
+    merged_df = merged_df.drop(columns=['hash'])
+    table_name = read_table_path.stem + '_TTT.xlsx'
+    output_folder = read_table_path.parent / 'TTT'
+    os.makedirs(output_folder, exist_ok=True)
+    output_file = output_folder / table_name
+
+    # Create metadata sheet
+    seq_index = read_table_df.columns.tolist().index('sequence')
+    samples = read_table_df.columns.tolist()[seq_index+1:]
+    metadata_sheet = pd.DataFrame(samples, columns=['Sample'])
+
+    # Rename columns to fit TTT v2
+    merged_df = merged_df.rename(columns={'sequence': 'Seq'})
+    merged_df = merged_df.rename(columns={'unique ID': 'ID'})
+
+    # Write both sheets into one Excel file
+    with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+        merged_df.to_excel(writer, index=False, sheet_name='Taxon Table')
+        metadata_sheet.to_excel(writer, index=False, sheet_name='Metadata Table')
+
+    st.success('✅ Tables successfully merged!')
+
 def main():
 
-    st.set_page_config(layout="wide")
+    st.set_page_config(page_title="APSCALE-GUI", page_icon="🧬", layout="wide")
 
     check_dependencies()
 
     # Sidebar inputs & outputs
     with st.sidebar:
-        st.subheader("APSCALE projects")
+        apscale_gui_version = get_package_versions_disp("apscale_gui")
+        st.markdown(f"# APSCALE-GUI v{apscale_gui_version}")
+        check_package_update_disp(["apscale_gui", "apscale", "apscale_blast", "boldigger3"])
+        st.divider()
 
         # read user_data.txt
         script_path = Path(__file__).resolve()
@@ -605,7 +788,7 @@ def main():
                         if f.is_dir() and "_apscale" in f.name
                     ]
 
-                    if st.button(label='Remember project folder', key='remember_project_folder',use_container_width=True):
+                    if st.button(label='Remember project folder', key='remember_project_folder', use_container_width=True):
                         script_path = Path(__file__).resolve()
                         user_data_txt = script_path.parent / '_user_data' / 'user_data.txt'
                         user_data_txt.parent.mkdir(parents=True, exist_ok=True)
@@ -629,7 +812,7 @@ def main():
                 else:
                     st.error("The given path does not exist or is not a directory.")
 
-                if not database_folder.exists():
+                if not database_folder.exists() or not tagging_scheme_folder.exists():
                     st.error("Please first initialise the database and tagging scheme folder.")
                     if st.button('Create database and tagging scheme folders', use_container_width=True):
                         os.makedirs(database_folder, exist_ok=True)
@@ -651,9 +834,9 @@ def main():
                 st.info(f'{n_databases} databases available')
 
                 if st.button('Open Database Hub', use_container_width=True):
-                    webbrowser.open('https://seafile.rlp.net/d/474b9682a5cb4193a6ad/')
+                    webbrowser.open('https://seafile.rlp.net/d/c172d076de1e4c45b594/')
                 if st.button('Download All Latest Databases', use_container_width=True):
-                    public_url = 'https://seafile.rlp.net/d/474b9682a5cb4193a6ad/?p=%2FLatest&mode=list'
+                    public_url = 'https://seafile.rlp.net/d/c172d076de1e4c45b594/?p=%2FLatest&mode=list'
                     download_seafile_zip(public_url, database_folder)
                 if st.button('Open APSCALE database folder', use_container_width=True):
                     open_folder(database_folder)
@@ -665,6 +848,7 @@ def main():
         st.subheader("Refresh")
 
         if st.button("🔄 Refresh files and folders", use_container_width=True):
+            st.session_state.pop("_last_settings_xlsx", None)
             st.success("Files and folders refreshed.")
 
 
@@ -798,7 +982,9 @@ def main():
                 # Replace NaN with empty string in all sheets
                 for sheet_name, df in settings_dfs.items():
                     settings_dfs[sheet_name] = df.fillna('')
-                read_settings_file(settings_xlsx, settings_dfs)
+                if st.session_state.get("_last_settings_xlsx") != settings_xlsx:
+                    st.session_state["_last_settings_xlsx"] = settings_xlsx
+                    read_settings_file(settings_xlsx, settings_dfs)
 
                 ############################################################################################################
                 st.subheader('APSCALE4')
@@ -882,10 +1068,28 @@ def main():
                 ############################################################################################################
                 st.subheader('Run apscale')
                 options = ['Run apscale (basic mode)', 'Run apscale (complete mode)', 'PE-merging', 'Primer-trimming', 'Quality-filtering', 'Dereplication', 'Denoising', 'SWARM clustering', 'Replicate merging', 'NC removal', 'Generate read table']
-                st.selectbox(label='Select module to run', options=options, index=0, key='run_apscale_mode')
+                col1, col2 = st.columns(2)
+                with col1:
+                    run_mode = st.selectbox(label='Select module to run', options=options, index=0, key='run_apscale_mode')
+                with col2:
+                    selected_module = False
+                    modules_to_run = []
+                    if run_mode not in ['Run apscale (basic mode)', 'Run apscale (complete mode)']:
+                        selected_module = st.selectbox(label='Select module(s) to run', options=['Run all following modules', 'Run selected module only'], key='run_apscale_mode_continous')
+                        if selected_module == 'Run all following modules':
+                            selected_module_basic = st.selectbox(label='Run in basic mode', options=['Yes', 'No'], key='selected_module_basic')
+                if selected_module == 'Run all following modules':
+                    module_loc = options.index(run_mode)
+                    modules_to_run = options[module_loc:]
+                    if selected_module_basic == 'Yes':
+                        modules_to_run = [i for i in modules_to_run if i not in ['Replicate merging', 'NC removal']]
+                    modules_disp = ' -> '.join(modules_to_run)
+                    st.info(f'All following modules will be run:\n\n{modules_disp}')
 
                 if st.session_state["P5 Primer (5' - 3')"] == '' or st.session_state["P7 Primer (5' - 3')"] == '' or st.session_state['min length'] == '' or st.session_state['max length'] =='':
                     st.error('Please fill out all required fields!')
+                elif float(st.session_state["sequence group threshold"]) >= 1:
+                    st.error('Please choose a sequence group threshold between 0 and 0.99.\n\nESVs are generated seperately!')
                 else:
                     if st.session_state['run_apscale_mode'] == 'Run apscale (basic mode)':
                         st.info('The "Basic mode" mode skips "Replicate merging" and "NC removal".')
@@ -893,8 +1097,7 @@ def main():
                         st.info('The "Complete mode" runs all modules (except specifically disabled above).')
                     if st.button('Start raw data analysis'):
                         update_settings_file(settings_xlsx, settings_dfs)
-                        run_apscale(st.session_state['run_apscale_mode'], project_folder)
-
+                        run_apscale(st.session_state['run_apscale_mode'], project_folder, modules_to_run)
 
                 ############################################################################################################
                 st.markdown("---")
@@ -907,13 +1110,13 @@ def main():
                     st.text_input(label='n_cores', key='n_cores', value=multiprocessing.cpu_count()-2)
                     st.text_input(label='subset_size', key='subset_size', value=100)
                 with col2:
-                    st.selectbox(label='Task', key='task', options=['blastn', 'megablast', 'dc-megablast'])
+                    st.selectbox(label='Task', key='task', options=['blastn', 'megablast', 'dc-megablast'], index=1)
                     st.text_input(label='max_target_seqs', key='max_target_seqs', value=20)
                 # Database & query
                 available_databases = {Path(i).name:Path(i) for i in glob.glob(str(path_to_projects / 'APSCALE_databases' / '*'))}
                 available_fasta_files = {Path(i).name:Path(i) for i in glob.glob(str(project_folder / '11_read_table' / 'data' / '*.fasta'))}
                 with st.expander("🗄️ Database & Query", expanded=False):
-                    st.selectbox(label='Database', key='database', options=list(available_databases.keys()) + ['remote'])
+                    st.selectbox(label='Database', key='database', options=list(available_databases.keys()))
                     st.selectbox(label='Query FASTA', key='query_fasta', options=list(available_fasta_files.keys()))
                 # Thresholds
                 with st.expander("⚖️ Thresholds", expanded=False):
@@ -922,52 +1125,52 @@ def main():
                         st.text_input(label='Species (%)', key='t_species', value=97)
                         st.text_input(label='Family (%)', key='t_family', value=90)
                         st.text_input(label='Class (%)', key='t_class', value=85)
-                    with col2:
                         st.text_input(label='Genus (%)', key='t_genus', value=95)
                         st.text_input(label='Order (%)', key='t_order', value=87)
-                        st.selectbox(label='Masking', key='masking', options=[True, False], index=1)
-                # Remote blastn
-                with st.expander("🌐 Remote blastn settings", expanded=False):
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.selectbox(label='Include "uncultured"', options=[False, True], key='include_uncultured')
-                        st.selectbox(label='Disable headless mode', options=[True, False], key='disable_headless')
                     with col2:
-                        st.text_input(label='Organism filter (Comma separated taxa)', key='organism_filter', value='Eukaryota')
-                        if st.button('Update taxid database'):
-                            run_update_taxids()
-
+                        st.selectbox(label='Masking', key='masking', options=[True, False], index=0)
+                        filter_mode_dict = {'similarity -> e-value -> rating (optional)':"1", 'e-value -> similarity -> rating (optional)':"2", 'similarity -> rating (optional)':"3"}
+                        filter_mode_key = st.selectbox(label='Filter mode', key='filter_mode_key', options=filter_mode_dict.keys())
+                        st.session_state["filter_mode"] = filter_mode_dict[filter_mode_key]
+                        st.selectbox(label='Rating range', key='rating_range', options=[i for i in range(0, 11)], index=5)
+                        st.selectbox(label='Similarity range', key='sim_range', options=[i for i in range(0, 11)], index=0)
+                # Run blast
                 st.subheader('Run apscale-blast')
                 if st.button(f'Start taxonomic assignment'):
-                    if st.session_state['task'] != 'megablast' and st.session_state['database'] == 'remote':
-                        st.error('Please select task "megablast" to perform the remote blast.')
-                    else:
-                        run_apscale_blast(project_folder, available_fasta_files, available_databases)
+                    run_apscale_blast(project_folder, available_fasta_files, available_databases)
 
                 ############################################################################################################
                 st.markdown("---")
                 st.header("BOLDigger3")
                 st.subheader('Settings')
                 # General settings
+                available_databases = {Path(i).name:Path(i) for i in glob.glob(str(path_to_projects / 'APSCALE_databases' / '*.duckdb'))}
                 with st.expander("🗄️ Database & Operating Mode", expanded=False):
-                    bold_databases = {
-                                    'ANIMAL LIBRARY (PUBLIC)': 1,
-                                    'ANIMAL SPECIES-LEVEL LIBRARY (PUBLIC + PRIVATE)': 2,
-                                    'ANIMAL LIBRARY (PUBLIC+PRIVATE)': 3,
-                                    'VALIDATED CANADIAN ARTHROPOD LIBRARY': 4,
-                                    'PLANT LIBRARY (PUBLIC)': 5,
-                                    'FUNGI LIBRARY (PUBLIC)': 6,
-                                    'ANIMAL SECONDARY MARKERS (PUBLIC)': 7,
-                                    'VALIDATED ANIMAL RED LIST LIBRARY': 8
-                                }
-                    st.selectbox(label='BOLD database', key='bold_database', options=list(bold_databases.keys()))
-                    bold_modes = {
-                                    'Rapid Species Search': 1,
-                                    'Genus and Species Search': 2,
-                                    'Exhaustive Search': 3
-                                }
-                    st.selectbox(label='Operating mode', key='bold_mode', options=list(bold_modes.keys()))
-                    st.selectbox(label='Query FASTA', key='bold_query_fasta', options=list(available_fasta_files.keys()))
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        boldigger_db_file = st.selectbox(label='Local BOLD database file', key='boldigger_db_file', options=list(available_databases.keys()))
+                        st.selectbox(label='Query FASTA', key='bold_query_fasta', options=list(available_fasta_files.keys()))
+                    with col2:
+                        bold_modes = {
+                                        'Rapid Species Search': 1,
+                                        'Genus and Species Search': 2,
+                                        'Exhaustive Search': 3
+                                    }
+                        st.selectbox(label='Operating mode', key='bold_mode', options=list(bold_modes.keys()))
+                        bold_databases = {
+                                        'ANIMAL LIBRARY (PUBLIC)': 1,
+                                        'ANIMAL SPECIES-LEVEL LIBRARY (PUBLIC + PRIVATE)': 2,
+                                        'ANIMAL LIBRARY (PUBLIC+PRIVATE)': 3,
+                                        'VALIDATED CANADIAN ARTHROPOD LIBRARY': 4,
+                                        'PLANT LIBRARY (PUBLIC)': 5,
+                                        'FUNGI LIBRARY (PUBLIC)': 6,
+                                        'ANIMAL SECONDARY MARKERS (PUBLIC)': 7,
+                                        'VALIDATED ANIMAL RED LIST LIBRARY': 8
+                                    }
+                        st.selectbox(label='BOLD database', key='bold_database', options=list(bold_databases.keys()))
+                    with col3:
+                        st.text_input("Enter BOLD user name", key="bold_user")
+                        st.text_input("Enter BOLD password", type="password", key="bold_password")
                 # Thresholds
                 with st.expander("⚖️ Thresholds", expanded=False):
                     col1, col2 = st.columns(2)
@@ -980,48 +1183,91 @@ def main():
                         st.text_input(label='Order (%)', key='bold_order', value=85)
 
                 st.subheader('Run BOLDigger3')
-                if st.button(f'Start taxonomic assignment against BOLD'):
-                    run_boldigger3(available_fasta_files, bold_modes, bold_databases)
+                if not st.session_state['boldigger_db_file']:
+                    st.info('No local BOLD database file found: Latest Database file will be downloaded.')
+
+                if st.button(f'Download latest BOLD database', use_container_width=True):
+                    if st.session_state['bold_user'] and st.session_state['bold_password']:
+                        bold_download_folder = path_to_projects / 'APSCALE_databases'
+                        run_boldigger3_db_download(bold_download_folder, st.session_state['bold_user'], st.session_state['bold_password'])
+                    else:
+                        st.error('Please provide a BOLD user name and password.')
+                if st.session_state['boldigger_db_file']:
+                    if st.button(f'Start taxonomic assignment against BOLD', use_container_width=True):
+                        db_path = available_databases[st.session_state['boldigger_db_file']]
+                        run_boldigger3_identification(available_fasta_files, bold_modes, bold_databases, db_path)
+                else:
+                    st.info('Please download the latest BOLD database first.')
 
                 ############################################################################################################
                 st.markdown("---")
-                st.header("📚 Links and Tutorials")
-                # GitHub Projects
-                with st.expander("🔗 GitHub Repositories", expanded=False):
-                    st.markdown("""
-                    - [APSCALE](https://github.com/DominikBuchner/apscale)  
-                    - [APSCALE-blast](https://github.com/TillMacher/apscale_blast)  
-                    - [APSCALE-GUI](https://github.com/TillMacher/apscale_gui)  
-                    - [TaxonTableTools2](https://github.com/TillMacher/TaxonTableTools2)  
-                    - [SWARM](https://github.com/torognes/swarm)  
-                    - [Demultiplexer2](https://github.com/DominikBuchner/demultiplexer2)  
-                    """)
-                # Tutorials
-                with st.expander("🎥 Video Tutorials", expanded=False):
-                    st.markdown("""
-                    - [Raw data processing tutorial](https://www.youtube.com/watch?v=SV7EJ1w-0u4&t=27s)  
-                    - [Installation tutorial](https://www.youtube.com/watch?v=SV7EJ1w-0u4&t=27s)  
-                    """)
-                # Manual
-                with st.expander("📖 Documentation", expanded=False):
-                    st.markdown("""
-                    - [APSCALE Manual (PDF)](https://github.com/DominikBuchner/apscale/blob/main/manual/apscale_manual.pdf)  
-                    """)
-                # Citations
-                with st.expander("📑 Citations", expanded=False):
-                    st.markdown("""
-                    
-                    - Buchner, D., Macher, T.-H., & Leese, F. (2022). APSCALE: Advanced pipeline for simple yet comprehensive analyses of DNA metabarcoding data. Bioinformatics, btac588. https://doi.org/10.1093/bioinformatics/btac588
-                    
-                    - Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet. Journal, 17(1), Article 1.
-                    
-                    - Rognes, T., Flouri, T., Nichols, B., Quince, C., & Mahé, F. (2016). VSEARCH: a versatile open source tool for metagenomics. PeerJ, 4, e2584.
+                st.header("📊 Data analysis")
+                with st.expander("✨ Apscale Analysis Module", expanded=False):
+                    st.write("Open the Apscale analysis module in a new window.")
+                    if st.button("Open APSCALE analysis window"):
+                        cmd = ["apscale", "--analyze", project_folder]
+                        if sys.platform != "win32":
+                            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, preexec_fn=os.setpgrp)
+                        else:
+                            subprocess.Popen(cmd, creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+                        st.success("APSCALE analysis module started — it will open in a new browser tab.")
 
-                    - Mahé, F., Czech, L., Stamatakis, A., Quince, C., de Vargas, C., Dunthorn, M., & Rognes, T. (2021). Swarm v3: Towards tera-scale amplicon clustering. Bioinformatics, 38(1), 267–269. https://doi.org/10.1093/bioinformatics/btab493
+                with st.expander("🧩 TaxonTableTools2", expanded=False):
+                    st.write(
+                        "Combine your read and taxonomy tables into a single, merged table for TaxonTableTools2.\n\n"
+                        "TaxonTableTools2 (TTT) is an easy-to-use graphical software designed for the analysis"
+                        "and visualization of DNA metabarcoding data. It enables biologists and researchers"
+                        "without bioinformatics experience to explore taxonomic datasets quickly, reproducibly,"
+                        "and interactively through a modern graphical user interface."
+                        )
+                    if st.button('Learn More'):
+                        webbrowser.open("https://github.com/TillMacher/TaxonTableTools2")
 
-                    """)
-                with st.expander("📦 Package versions", expanded=False):
-                    get_package_versions()
+        ############################################################################################################
+        st.markdown("---")
+        st.header("📚 Links and Tutorials")
+        # GitHub Projects
+        with st.expander("🔗 GitHub Repositories", expanded=False):
+            st.markdown("""
+            - [APSCALE](https://github.com/DominikBuchner/apscale)  
+            - [APSCALE-blast](https://github.com/TillMacher/apscale_blast)  
+            - [APSCALE-GUI](https://github.com/TillMacher/apscale_gui)  
+            - [TaxonTableTools2](https://github.com/TillMacher/TaxonTableTools2)  
+            - [VSEARCH](https://github.com/torognes/vsearch)
+            - [CUTADAPT](https://github.com/marcelm/cutadapt)
+            - [SWARM](https://github.com/torognes/swarm)
+            - [Demultiplexer2](https://github.com/DominikBuchner/demultiplexer2)  
+            """)
+        # Tutorials
+        with st.expander("🎥 Video Tutorials", expanded=False):
+            st.markdown("""
+            - [Raw data processing tutorial](https://www.youtube.com/watch?v=SV7EJ1w-0u4&t=27s)  
+            - [Installation tutorial](https://www.youtube.com/watch?v=SV7EJ1w-0u4&t=27s)  
+            """)
+        # Manual
+        with st.expander("📖 Documentation", expanded=False):
+            st.markdown("""
+            - [APSCALE Manual (PDF)](https://github.com/DominikBuchner/apscale/blob/main/manual/apscale_manual.pdf)  
+            """)
+        # Citations
+        with st.expander("📑 Citations", expanded=False):
+            st.markdown("""
+            
+            APSCALE
+            - Buchner, D., Macher, T.-H., & Leese, F. (2022). APSCALE: Advanced pipeline for simple yet comprehensive analyses of DNA metabarcoding data. Bioinformatics, btac588. https://doi.org/10.1093/bioinformatics/btac588
+            
+            CUTADAPT
+            - Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet. Journal, 17(1), Article 1.
+            
+            VSEARCH
+            - Rognes, T., Flouri, T., Nichols, B., Quince, C., & Mahé, F. (2016). VSEARCH: a versatile open source tool for metagenomics. PeerJ, 4, e2584.
+
+            SWARM
+            - Mahé, F., Czech, L., Stamatakis, A., Quince, C., de Vargas, C., Dunthorn, M., & Rognes, T. (2021). Swarm v3: Towards tera-scale amplicon clustering. Bioinformatics, 38(1), 267–269. https://doi.org/10.1093/bioinformatics/btab493
+
+            """)
+        with st.expander("📦 Package versions", expanded=False):
+            get_package_versions()
 
 if __name__ == "__main__":
     main()

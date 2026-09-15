@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="apscale_gui",
-    version="3.0.1",
+    version="3.3.1",
     author="Till-Hendrik Macher",
     author_email="macher@uni-trier.de",
     description="Advanced Pipeline for Simple yet Comprehensive AnaLysEs of DNA metabarcoding data - Graphical User Interface",
@@ -29,10 +29,12 @@ setuptools.setup(
                         "scipy>=1.16.1",
                         "cutadapt>=5.1",
                         "update-checker>=0.18.0",
+                        "update_checker",
                         "powerlaw>=1.5",
                         "requests>=2.32.3",
                         "beautifulsoup4>=4.13.4",
-                        "lxml>=6.0.0"
+                        "lxml>=6.0.0",
+                        "asyncio>=4.0.0"
                         ],
     include_package_data = True,
     classifiers=[
