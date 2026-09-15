@@ -38,7 +38,10 @@ To update APSCALE GUI to the latest version, use:
 
 `pip install --upgrade apscale_gui`
 
-Note: APSCALE and APSCALE GUI requires python3.12 or higher!
+### Important notes:
+* APSCALE and APSCALE GUI requires python3.12 or higher!
+* If possible, use the apscale4 environment.
+* Apscale projects created with apscale v3 or older are not compatible with apscale v4. Please create a new project.
 
 ---
 
@@ -135,7 +138,7 @@ Settings_My_new_project.xlsx
 
 18. The sequencing results can now be taxonomically assigned using [APSCALE-blast](https://github.com/TillMacher/apscale_blast).
 
-19. APSCALE-blast is based on blast+ and performs the taxonomic assignments against [pre-compiled local databases](https://seafile.rlp.net/d/474b9682a5cb4193a6ad/). These can be indivudally downloaded or batch-downloaded and extracted using the "Download All Latest Databases" button. The APSCALE databases are stored in the folder "APSCALE_projects/APSCALE_databases".
+19. APSCALE-blast is based on blast+ and performs the taxonomic assignments against [pre-compiled local databases](https://seafile.rlp.net/d/c172d076de1e4c45b594/). These can be indivudally downloaded or batch-downloaded and extracted using the "Download All Latest Databases" button. The APSCALE databases are stored in the folder "APSCALE_projects/APSCALE_databases".
 
 20. To perform the taxonomic assignment, simply select the .fasta file and the database to begin the blast search.
 
@@ -163,4 +166,5 @@ When using APSCALE, please cite the following:
 * [VSEARCH](https://peerj.com/articles/2584/)
 * [Cutadapt](https://journal.embnet.org/index.php/embnetjournal/article/view/200)
 * [BOLDigger](https://mbmg.pensoft.net/article/53535/)
+* [BLAST+](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-10-421)
 * [The specific database for local BLASTn search](https://github.com/TillMacher/apscale_blast?tab=readme-ov-file#available-databases).
