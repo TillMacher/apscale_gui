@@ -139,8 +139,9 @@ def check_package_update_disp(packages):
     for pkg in packages:
         installed_version = importlib.metadata.version(pkg)
         checker = UpdateChecker()
-        result = checker.check(pkg, installed_version)
+        result = checker.check(package_name=pkg, package_version=installed_version)
         if result:
+            print(f'\n{result}\n$ pip install --upgrade {pkg}\n')
             st.sidebar.info(f'{result}\n\n$ pip install --upgrade {pkg}')
 
 def get_package_versions_disp(pkg):
@@ -1113,20 +1114,20 @@ def main():
                     st.selectbox(label='Task', key='task', options=['blastn', 'megablast', 'dc-megablast'], index=1)
                     st.text_input(label='max_target_seqs', key='max_target_seqs', value=20)
                 # Database & query
-                available_databases = {Path(i).name:Path(i) for i in glob.glob(str(path_to_projects / 'APSCALE_databases' / '*'))}
+                available_databases = {Path(i).name: Path(i) for i in glob.glob(str(path_to_projects / 'APSCALE_databases' / '*')) if Path(i).is_dir()}
                 available_fasta_files = {Path(i).name:Path(i) for i in glob.glob(str(project_folder / '11_read_table' / 'data' / '*.fasta'))}
                 with st.expander("🗄️ Database & Query", expanded=False):
-                    st.selectbox(label='Database', key='database', options=list(available_databases.keys()))
-                    st.selectbox(label='Query FASTA', key='query_fasta', options=list(available_fasta_files.keys()))
+                    st.selectbox(label='Database', key='database', options=sorted(available_databases.keys()))
+                    st.selectbox(label='Query FASTA', key='query_fasta', options=sorted(available_fasta_files.keys()))
                 # Thresholds
                 with st.expander("⚖️ Thresholds", expanded=False):
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.text_input(label='Species (%)', key='t_species', value=97)
-                        st.text_input(label='Family (%)', key='t_family', value=90)
-                        st.text_input(label='Class (%)', key='t_class', value=85)
+                        st.text_input(label='Species (%)', key='t_species', value=98)
                         st.text_input(label='Genus (%)', key='t_genus', value=95)
+                        st.text_input(label='Family (%)', key='t_family', value=90)
                         st.text_input(label='Order (%)', key='t_order', value=87)
+                        st.text_input(label='Class (%)', key='t_class', value=85)
                     with col2:
                         st.selectbox(label='Masking', key='masking', options=[True, False], index=0)
                         filter_mode_dict = {'similarity -> e-value -> rating (optional)':"1", 'e-value -> similarity -> rating (optional)':"2", 'similarity -> rating (optional)':"3"}
